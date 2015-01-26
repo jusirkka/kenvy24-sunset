@@ -1,0 +1,5 @@
+mkdir kenvy24-sunset-build
+cd kenvy24-sunset
+cmake -Wno-dev --build ../kenvy24-sunset-build .
+make
+sudo make install
