@@ -1,0 +1,786 @@
+<!DOCTYPE UI><UI version="3.3" stdsetdef="1">
+<class>PeakMeter</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>PeakMeter</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>124</width>
+            <height>197</height>
+        </rect>
+    </property>
+    <property name="sizePolicy">
+        <sizepolicy>
+            <hsizetype>7</hsizetype>
+            <vsizetype>7</vsizetype>
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+        </sizepolicy>
+    </property>
+    <property name="minimumSize">
+        <size>
+            <width>0</width>
+            <height>0</height>
+        </size>
+    </property>
+    <property name="caption">
+        <string>Peakmeter</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <property name="margin">
+            <number>0</number>
+        </property>
+        <property name="spacing">
+            <number>0</number>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout80</cstring>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>0</number>
+                </property>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_20</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>0</green>
+                            <blue>0</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_19</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>0</green>
+                            <blue>0</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_18</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>255</green>
+                            <blue>0</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_17</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>255</green>
+                            <blue>127</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_16</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>255</green>
+                            <blue>127</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_15</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>255</green>
+                            <blue>127</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_14</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="color">
+                        <color>
+                            <red>255</red>
+                            <green>255</green>
+                            <blue>127</blue>
+                        </color>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_13</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_12</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_11</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_10</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_9</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_8</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_7</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_6</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_5</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_4</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_3</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_2</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_1</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+                <widget class="KLed">
+                    <property name="name">
+                        <cstring>led_0</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>7</hsizetype>
+                            <vsizetype>7</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>1</height>
+                        </size>
+                    </property>
+                    <property name="state">
+                        <enum>Off</enum>
+                    </property>
+                    <property name="shape">
+                        <enum>Rectangular</enum>
+                    </property>
+                    <property name="look">
+                        <enum>Flat</enum>
+                    </property>
+                    <property name="darkFactor">
+                        <number>200</number>
+                    </property>
+                </widget>
+            </vbox>
+        </widget>
+    </vbox>
+</widget>
+<customwidgets>
+</customwidgets>
+<layoutdefaults spacing="6" margin="11"/>
+<includehints>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+    <includehint>kled.h</includehint>
+</includehints>
+</UI>

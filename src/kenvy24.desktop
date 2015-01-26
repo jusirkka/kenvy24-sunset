@@ -1,0 +1,8 @@
+# KDE Config File
+[Desktop Entry]
+Type=Application
+Exec=kenvy24
+Icon=kenvy24
+Comment=
+Name=Kenvy24
+X-DCOP-ServiceType=Unique
