@@ -17,20 +17,27 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _MIXERINPUT_H_INCLUDED_
-#define _MIXERINPUT_H_INCLUDED_
+#ifndef _TABVIEW_H_INCLUDED_
+#define _TABVIEW_H_INCLUDED_
 
 #include "envystructs.h"
-#include "mixerinput.h"
 
-class KConfig;
+
+#include <QCheckBox>
+#include <QButtonGroup>
+
 class EnvyCard;
+class QTimer;
+class QListBoxItem;
 
-class MixerInputImpl : public MixerInput {
+
+class TabView : public QWidget {
     Q_OBJECT
 
+public:
+
 private:
-    int mIndex;
+
     bool inSlotFlag;
     bool inEventFlag;
 
@@ -44,41 +51,58 @@ private:
         }
     };
 
+    EnvyCard*       envyCard;
+    QTimer*         mTimer;
+    QListBoxItem*   currentProfileItem;
+    bool mLevelsEnabled;
+    typedef QList<int> IndexList;
+    IndexList mLevelIndices;
+    int mUpdateInterval;
+    QString mConfigRateLocking;
+    QString mConfigRateReset;
+    QString mConfigInternalClock;
+    QString mConfigClockDefault;
+    QString mConfigDeemphasis;
+    QString mConfigIEC958;
+    QMap<QString, QStringList> mConfigEnums;
+    QMap<QString, QCheckBox*> mConfigCheckers;
+    QMap<QString, QButtonGroup*> mConfigGroups;
+    int mIdxOfInternalSamples;
+
 public:
+    TabView(QWidget* parent = 0);
+    ~TabView();
 
-
-    MixerInputImpl(QWidget* parent, const char* name = 0);
-
-
-    void setup(int index);
-    void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
-    void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
-        
-    void saveToConfig(KConfig*);
-    void loadFromConfig(KConfig*);
-
-    void updatePeaks(StereoLevels level);
+    void setLevelsEnabled(bool enabled);
 
 public slots:
+    void updateMeters();
+    void enableLevels();
+    void updateBoolConfig(const QString&, bool);
+    void updateEnumConfig(const QString&, const QString&);
 
-    void mixerUpdateMuteSwitch(int, LeftRight, bool);
-    void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
+private:
 
-protected:
+    void setupTimer();
+    void setupTabs();
+    void connectToCard();
+    void connectFromCard();
+    void loadProfiles();
 
-    virtual void lockToggled(bool);
-    virtual void leftMuteToggled(bool);
-    virtual void rightMuteToggled(bool);
-    virtual void leftVolumeChanged(int);
-    virtual void rightVolumeChanged(int);
-    virtual void leftStereoChanged(int);
-    virtual void rightStereoChanged(int);
+    virtual void masterClockChanged(int);
+    virtual void deemphasisChanged(int);
+    virtual void intRateChanged(int);
+    virtual void digRateChanged(int);
+    virtual void rateLockToggled(bool);
+    virtual void idleResetToggled(bool);
+    virtual void loadProfile(QListBoxItem*);
+    virtual void updateProfile();
+    virtual void deleteProfile();
+    virtual void newProfile();
 
 signals:
-
-    void muted(int index, LeftRight channel, bool m);
-    void adjusted(int index, LeftRight channel, int volume, int stereo);
+    void enumConfigChanged(const QString&, const QString&);
+    void boolConfigChanged(const QString&, bool);
 };
 
-
-#endif // _MIXERINPUT_H_INCLUDED_
+#endif // _TABVIEW_H_INCLUDED_

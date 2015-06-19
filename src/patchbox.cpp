@@ -18,7 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "patchboximpl.h"
+#include "patchbox.h"
 #include "envycard.h"
 
 #include <qbuttongroup.h>
@@ -27,7 +27,7 @@
 #include <kconfig.h>
 #include <kdebug.h>
 
-PatchBoxImpl::PatchBoxImpl(QWidget* parent, const char* name): PatchBox(parent, name)
+PatchBox::PatchBox(QWidget* parent): QWidget(parent)
 {
     mLSources << "1" << "2" << "3" << "4" << "5";
     mRSources << "1" << "2" << "3" << "4" << "5";
@@ -45,14 +45,14 @@ PatchBoxImpl::PatchBoxImpl(QWidget* parent, const char* name): PatchBox(parent, 
     mRSources[rightSelection->id(pcm_r)] = QString(R_SRC_PCM);
 }
 
-PatchBoxImpl::~PatchBoxImpl() {}
+PatchBox::~PatchBox() {}
 
 
-void PatchBoxImpl::setup(int index) {
+void PatchBox::setup(int index) {
     mIndex = index;
 }
 
-void PatchBoxImpl::connectToCard(EnvyCard* envyCard, const QString& outputType) {
+void PatchBox::connectToCard(EnvyCard* envyCard, const QString& outputType) {
     if (outputType == "digital") {
         connect(this, SIGNAL(routeChanged(int, LeftRight, const QString&)),
                envyCard, SLOT(setDigitalRoute(int, LeftRight, const QString&)));
@@ -63,7 +63,7 @@ void PatchBoxImpl::connectToCard(EnvyCard* envyCard, const QString& outputType) 
            envyCard, SLOT(setAnalogRoute(int, LeftRight, const QString&)));
 }
 
-void PatchBoxImpl::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
+void PatchBox::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
     if (outputType == "digital") {
         connect(envyCard, SIGNAL(digitalRouteUpdated(int, LeftRight, const QString&)),
                              SLOT(updateRoute(int, LeftRight, const QString&)));
@@ -74,7 +74,7 @@ void PatchBoxImpl::connectFromCard(EnvyCard* envyCard, const QString& outputType
                          SLOT(updateRoute(int, LeftRight, const QString&)));
 }
         
-void PatchBoxImpl::saveToConfig(KConfig* config) {
+void PatchBox::saveToConfig(KConfig* config) {
     QString keyBase = name();
     config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isChecked());
 
@@ -85,7 +85,7 @@ void PatchBoxImpl::saveToConfig(KConfig* config) {
     config->writeEntry(QString("%1-route").arg(keyBase), rightSelection->selectedId());
 }
 
-void PatchBoxImpl::loadFromConfig(KConfig* config) {
+void PatchBox::loadFromConfig(KConfig* config) {
     kdDebug() << k_funcinfo << "entering" << endl;
 
     QString keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
@@ -104,7 +104,7 @@ void PatchBoxImpl::loadFromConfig(KConfig* config) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::updateRoute(int index, LeftRight channel, const QString& soundSource) {
+void PatchBox::updateRoute(int index, LeftRight channel, const QString& soundSource) {
     if (index != mIndex) return;
 
     kdDebug() << k_funcinfo << "entering " << endl;
@@ -121,7 +121,7 @@ void PatchBoxImpl::updateRoute(int index, LeftRight channel, const QString& soun
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::leftPressed(int btn) {
+void PatchBox::leftPressed(int btn) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -131,7 +131,7 @@ void PatchBoxImpl::leftPressed(int btn) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::rightPressed(int btn) {
+void PatchBox::rightPressed(int btn) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -141,7 +141,7 @@ void PatchBoxImpl::rightPressed(int btn) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::leftNotified(int btn) {
+void PatchBox::leftNotified(int btn) {
     kdDebug() << k_funcinfo << "entering" << endl;
     QString searchTerm = mRSources[btn];
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
@@ -159,7 +159,7 @@ void PatchBoxImpl::leftNotified(int btn) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::rightNotified(int btn) {
+void PatchBox::rightNotified(int btn) {
     kdDebug() << k_funcinfo << "entering" << endl;
     QString searchTerm = mLSources[btn];
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
@@ -177,7 +177,7 @@ void PatchBoxImpl::rightNotified(int btn) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void PatchBoxImpl::lockToggled(bool locked) {
+void PatchBox::lockToggled(bool locked) {
     kdDebug() << k_funcinfo << "entering" << endl;
     if (locked) {
         connect(leftSelection, SIGNAL(pressed(int)), this, SLOT(rightNotified(int)));
@@ -193,4 +193,4 @@ void PatchBoxImpl::lockToggled(bool locked) {
 
 
 
-#include "patchboximpl.moc"
+#include "patchbox.moc"

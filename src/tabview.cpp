@@ -33,10 +33,10 @@
 
 
 #include "envycard.h"
-#include "tabviewimpl.h"
-#include "mixerinputimpl.h"
-#include "mastervolumeimpl.h"
-#include "patchboximpl.h"
+#include "tabview.h"
+#include "mixerinput.h"
+#include "mastervolume.h"
+#include "patchbox.h"
 
 #define L_MASTER 0
 #define L_PCM 1
@@ -54,8 +54,8 @@
 #define ENUM_D441 "44.1kHz"
 #define ENUM_D480 "48kHz"
 
-TabViewImpl::TabViewImpl(QWidget* parent) :
-        TabView(parent), envyCard(0),
+TabView::TabView(QWidget* parent) :
+        QWidget(parent), envyCard(0),
         currentProfileItem(0),
         mLevelsEnabled(true),
         mLevelIndices(4),
@@ -127,11 +127,11 @@ TabViewImpl::TabViewImpl(QWidget* parent) :
     setupTimer();
 }
 
-TabViewImpl::~TabViewImpl() {
+TabView::~TabView() {
     delete envyCard;
 }
 
-void TabViewImpl::setupTabs() {
+void TabView::setupTabs() {
 
     mixerAnalogIn->inputGroup->setTitle("Analog In");
     mixerAnalogIn->setup(0);
@@ -148,7 +148,7 @@ void TabViewImpl::setupTabs() {
 
 
 
-void TabViewImpl::connectToCard() {
+void TabView::connectToCard() {
     QString capture("capture");
     QString spdif("spdif");
 
@@ -171,7 +171,7 @@ void TabViewImpl::connectToCard() {
 }
 
 
-void TabViewImpl::connectFromCard() {
+void TabView::connectFromCard() {
     QString capture("capture");
     QString spdif("spdif");
 
@@ -194,7 +194,7 @@ void TabViewImpl::connectFromCard() {
 
 
 
-void TabViewImpl::updateMeters() {
+void TabView::updateMeters() {
     EnvyCard::PeakList peaks = envyCard->getPeaks(mLevelIndices);
 
     mixerAnalogIn->updatePeaks(peaks[L_ANALOG_IN]);
@@ -203,13 +203,13 @@ void TabViewImpl::updateMeters() {
     masterVolume->updatePeaks(peaks[L_MASTER]);
 }
 
-void TabViewImpl::setupTimer() {
+void TabView::setupTimer() {
     mTimer = new QTimer(this);
     connect(mTimer, SIGNAL(timeout()), SLOT(updateMeters()));
     if (mLevelsEnabled) mTimer->start(mUpdateInterval, FALSE);
 }
 
-void TabViewImpl::enableLevels() {
+void TabView::enableLevels() {
     mLevelsEnabled = !mLevelsEnabled;
     KActionCollection* collection = ((KMainWindow*) parent())->actionCollection();
     if (mLevelsEnabled) {
@@ -222,7 +222,7 @@ void TabViewImpl::enableLevels() {
 }
 
 
-void TabViewImpl::setLevelsEnabled(bool enabled) {
+void TabView::setLevelsEnabled(bool enabled) {
     mLevelsEnabled = enabled;
     KActionCollection* collection = ((KMainWindow*) parent())->actionCollection();
     if (mLevelsEnabled) {
@@ -234,7 +234,7 @@ void TabViewImpl::setLevelsEnabled(bool enabled) {
     }
 }
 
-void TabViewImpl::masterClockChanged(int id) {
+void TabView::masterClockChanged(int id) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -253,7 +253,7 @@ void TabViewImpl::masterClockChanged(int id) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void TabViewImpl::deemphasisChanged(int id) {
+void TabView::deemphasisChanged(int id) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -263,7 +263,7 @@ void TabViewImpl::deemphasisChanged(int id) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void TabViewImpl::intRateChanged(int id) {
+void TabView::intRateChanged(int id) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -273,7 +273,7 @@ void TabViewImpl::intRateChanged(int id) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void TabViewImpl::digRateChanged(int id) {
+void TabView::digRateChanged(int id) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -283,7 +283,7 @@ void TabViewImpl::digRateChanged(int id) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void TabViewImpl::rateLockToggled(bool toggle) {
+void TabView::rateLockToggled(bool toggle) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -297,7 +297,7 @@ void TabViewImpl::rateLockToggled(bool toggle) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void TabViewImpl::idleResetToggled(bool toggle) {
+void TabView::idleResetToggled(bool toggle) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (inSlotFlag) return;
@@ -312,7 +312,7 @@ void TabViewImpl::idleResetToggled(bool toggle) {
 }
 
 
-void TabViewImpl::updateBoolConfig(const QString& var, bool value) {
+void TabView::updateBoolConfig(const QString& var, bool value) {
     kdDebug() << k_funcinfo << "entering " << endl;
     ExclusiveFlag inSlot(inSlotFlag);
     if (inEventFlag) return;
@@ -327,7 +327,7 @@ void TabViewImpl::updateBoolConfig(const QString& var, bool value) {
     }
 }
 
-void TabViewImpl::updateEnumConfig(const QString& var, const QString& value) {
+void TabView::updateEnumConfig(const QString& var, const QString& value) {
     kdDebug() << k_funcinfo << "entering " << endl;
     ExclusiveFlag inSlot(inSlotFlag);
     if (inEventFlag) return;
@@ -355,7 +355,7 @@ void TabViewImpl::updateEnumConfig(const QString& var, const QString& value) {
 // Profiles stuff
 // ---------------------------------
 
-void TabViewImpl::loadProfiles() {
+void TabView::loadProfiles() {
     KConfig* config = kapp->config();
     QStringList groupList = config->groupList();
     for (QStringList::iterator it = groupList.begin(); it != groupList.end(); it++) {
@@ -373,7 +373,7 @@ void TabViewImpl::loadProfiles() {
 }
 
 
-void TabViewImpl::newProfile() {
+void TabView::newProfile() {
     QString profileName;
 
     for (;;) {
@@ -395,7 +395,7 @@ void TabViewImpl::newProfile() {
     }
 }
 
-void TabViewImpl::loadProfile(QListBoxItem* item) {
+void TabView::loadProfile(QListBoxItem* item) {
     if (item) {
         if (currentProfileItem != 0) {
             // TODO: prompt to save previously selected profile, if changes are detected
@@ -454,7 +454,7 @@ void TabViewImpl::loadProfile(QListBoxItem* item) {
     }
 }
 
-void TabViewImpl::updateProfile() {
+void TabView::updateProfile() {
     QString profileGroup = QString("profile-%1").arg(currentProfileItem->text());
     KConfig* config = kapp->config();
     config->setGroup(profileGroup);
@@ -480,7 +480,7 @@ void TabViewImpl::updateProfile() {
     config->sync();
 }
 
-void TabViewImpl::deleteProfile() {
+void TabView::deleteProfile() {
     if (KMessageBox::questionYesNo(this, "Delete selected profile?") == KMessageBox::Yes) {
         if (currentProfileItem != 0) {
             KConfig* config = kapp->config();
@@ -495,4 +495,4 @@ void TabViewImpl::deleteProfile() {
 
 
 
-#include "tabviewimpl.moc"
+#include "tabview.moc"

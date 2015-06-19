@@ -23,29 +23,31 @@
 
 // Local includes.
 
-#include "dcopiface.h"
-#include "dcopiface.moc"
+#include "dbusiface.h"
+#include "dbusifaceadaptor.h"
 
-DCOPIface::DCOPIface(QObject *parent, const char *name)
-         : QObject(parent, name), DCOPObject(name)
+DBusIface::DBusIface(QObject *parent)
+         : QObject(parent)
 {
+    new DBusIfaceAdaptor(this);
+    QDBusConnection dbus = QDBusConnection::sessionBus();
+    dbus.registerObject("/kenvy24", this);
+    dbus.registerService("org.kvanttiapina.kenvy24");
 }
 
-DCOPIface::~DCOPIface()
-{
-}
+DBusIface::~DBusIface() {}
 
-void DCOPIface::pcmVolumeUp()
+void DBusIface::pcmVolumeUp()
 {
     emit signalPCMVolumeUp();
 }
  
-void DCOPIface::pcmVolumeDown()
+void DBusIface::pcmVolumeDown()
 {
     emit signalPCMVolumeDown();
 }
 
-void DCOPIface::pcmVolumeMute()
+void DBusIface::pcmVolumeMute()
 {
     emit signalPCMVolumeMute();
 }

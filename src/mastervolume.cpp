@@ -18,34 +18,34 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include <qslider.h>
-#include <qcheckbox.h>
+#include <QSlider>
+#include <QCheckBox>
 #include <kconfig.h>
 #include <kdebug.h>
 
 
-#include "mastervolumeimpl.h"
-#include "peakmeterimpl.h"
+#include "mastervolume.h"
+#include "peakmeter.h"
 #include "envycard.h"
 
-MasterVolumeImpl::MasterVolumeImpl(QWidget* parent, const char * name) : MasterVolume(parent, name) {}
+MasterVolume::MasterVolume(QWidget* parent, const char * name) : MasterVolume(parent, name) {}
 
-void MasterVolumeImpl::connectToCard(EnvyCard* envyCard) {
+void MasterVolume::connectToCard(EnvyCard* envyCard) {
     connect(this, SIGNAL(adjusted(LeftRight, int)), envyCard, SLOT(setDACVolume(LeftRight, int)));
 }
 
-void MasterVolumeImpl::connectFromCard(EnvyCard* envyCard) {
+void MasterVolume::connectFromCard(EnvyCard* envyCard) {
     connect(envyCard, SIGNAL(analogUpdateDACVolume(LeftRight, int)), this, SLOT(analogUpdateDACVolume(LeftRight, int)));
 }
 
-void MasterVolumeImpl::updatePeaks(StereoLevels level) {
+void MasterVolume::updatePeaks(StereoLevels level) {
     leftMeter->updatePeak(level.left);
     rightMeter->updatePeak(level.right);
 }
 
 
 
-void MasterVolumeImpl::saveToConfig(KConfig* config) {
+void MasterVolume::saveToConfig(KConfig* config) {
     QString keyBase = name();
     config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isOn());
 
@@ -57,7 +57,7 @@ void MasterVolumeImpl::saveToConfig(KConfig* config) {
 
 }
 
-void MasterVolumeImpl::loadFromConfig(KConfig* config) {
+void MasterVolume::loadFromConfig(KConfig* config) {
     kdDebug() << k_funcinfo << "entering " << endl;
 
     QString keyBase = QString("%1-left").arg(name());
@@ -77,7 +77,7 @@ void MasterVolumeImpl::loadFromConfig(KConfig* config) {
 }
 
 
-void MasterVolumeImpl::analogUpdateDACVolume(LeftRight channel, int value) {
+void MasterVolume::analogUpdateDACVolume(LeftRight channel, int value) {
     kdDebug() << k_funcinfo << "entering " << endl;
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
@@ -93,7 +93,7 @@ void MasterVolumeImpl::analogUpdateDACVolume(LeftRight channel, int value) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MasterVolumeImpl::leftVolumeChanged(int dispVal) {
+void MasterVolume::leftVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -106,7 +106,7 @@ void MasterVolumeImpl::leftVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MasterVolumeImpl::rightVolumeChanged(int dispVal) {
+void MasterVolume::rightVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -119,7 +119,7 @@ void MasterVolumeImpl::rightVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MasterVolumeImpl::lockToggled(bool locked) {
+void MasterVolume::lockToggled(bool locked) {
     kdDebug() << k_funcinfo << "entering " << endl;
     if (locked) {
         connect(this, SIGNAL(notifyLeftVolume(int)), leftSlider, SLOT(setValue(int)));
@@ -131,4 +131,4 @@ void MasterVolumeImpl::lockToggled(bool locked) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-#include "mastervolumeimpl.moc"
+#include "mastervolume.moc"

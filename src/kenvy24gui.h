@@ -28,7 +28,7 @@
 
 #include <kmainwindow.h>
 
-class TabViewImpl;
+class TabView;
 class KEnvy24DockWidget;
 
 /**
@@ -39,7 +39,7 @@ class KEnvy24DockWidget;
 class KEnvy24Window: public KMainWindow {
     Q_OBJECT
 private:
-    TabViewImpl* mainView;
+    TabView* mainView;
     KEnvy24DockWidget *mDockWidget;
     bool mShuttingDown;
 

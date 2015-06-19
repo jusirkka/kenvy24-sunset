@@ -24,18 +24,18 @@
 
 #include <kmainwindow.h>
 #include <kstdaction.h>
-#include <kactionclasses.h>
+// #include <kactionclasses.h>
 #include <kapplication.h>
 #include <klocale.h>
 #include <kmenubar.h>
-#include <kpopupmenu.h>
+// #include <kpopupmenu.h>
 #include <kmessagebox.h>
 #include <kdebug.h>
 #include <qslider.h>
 
 #include "kenvy24gui.h"
-#include "tabviewimpl.h"
-#include "mixerinputimpl.h"
+#include "tabview.h"
+#include "mixerinput.h"
 #include "kenvy24dockwidget.h"
 #include "envystructs.h"
 
@@ -43,7 +43,7 @@ KEnvy24Window::KEnvy24Window()
     : KMainWindow(0, "KEnvy24", WDestructiveClose),
       mShuttingDown(false)
 {
-    mainView = new TabViewImpl(this);
+    mainView = new TabView(this);
 
     // Actions
     KStdAction::quit(this, SLOT(slotQuit()), actionCollection());
@@ -55,7 +55,7 @@ KEnvy24Window::KEnvy24Window()
 
     createGUI();
     
-    mDockWidget = new KEnvy24DockWidget(mainView, this);
+    mDockWidget = new KEnvy24DockWidget(this);
 
     mDockWidget->show();
     connect(mDockWidget, SIGNAL(quitSelected()), this, SLOT(slotAboutToQuit()));

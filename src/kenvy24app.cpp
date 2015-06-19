@@ -22,9 +22,8 @@
 
 #include "kenvy24app.h"
 #include "kenvy24gui.h"
-#include "dcopiface.h"
 #include <kdebug.h>
-
+#include "dbusiface.h"
 
 KEnvy24App::KEnvy24App(): KUniqueApplication(), mEnvy(0) {}
 
@@ -38,14 +37,14 @@ int KEnvy24App::newInstance() {
     if (mEnvy) return KUniqueApplication::newInstance();
 
     mEnvy = new KEnvy24Window;
-    mDCOP = new DCOPIface(this, "mixer");
+    mDBus = new DBusIface(this);
 
-    connect(mDCOP, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(slotPCMVolumeUp()));
-    connect(mDCOP, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(slotPCMVolumeDown()));
-    connect(mDCOP, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(slotPCMVolumeMute()));
+    connect(mDBus, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(slotPCMVolumeUp()));
+    connect(mDBus, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(slotPCMVolumeDown()));
+    connect(mDBus, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(slotPCMVolumeMute()));
 
-    if (isRestored() && KMainWindow::canBeRestored(0)) {
-        mEnvy->restore(0, FALSE);
+    if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
+        mEnvy->restore(1, false);
     }
     mEnvy->show();
     return 0;

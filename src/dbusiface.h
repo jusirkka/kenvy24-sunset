@@ -22,52 +22,36 @@
  * 
  * ============================================================ */
  
-#ifndef DCOPIFACE_H
-#define DCOPIFACE_H
+#ifndef DBUSIFACE_H
+#define DBUSIFACE_H
 
-// Qt includes.
+#include <QObject>
 
-#include <qobject.h>
-#include <dcopobject.h>
-
-class DCOPIface : public QObject, public DCOPObject
+class DBusIface : public QObject
 {
-    K_DCOP
     Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.kvanttiapina.kenvy24")
 
 public:
 
-    /**
-     * Standard constructor.
-     * @param parent Parent object reference, passed to @ref QObject constructor
-     * @param name Specifis the name of the object, passed to @ref QObject constructor
-     */
-    DCOPIface(QObject *parent = 0, const char *name = 0);
+    DBusIface(QObject* parent=0);
 
-    /**
-     * Standard destructor
-    */
-    ~DCOPIface();
+    ~DBusIface();
 
 signals:
     
-    /**
-     * This signal is emitted when @ref cameraAutoDetect() is called via DCOP
-     */
     void signalPCMVolumeUp();
     void signalPCMVolumeDown();
     void signalPCMVolumeMute();
 
 
 
-public:
+public slots:
 
-k_dcop:
-
-    ASYNC pcmVolumeUp();
-    ASYNC pcmVolumeDown();
-    ASYNC pcmVolumeMute();
+    void pcmVolumeUp();
+    void pcmVolumeDown();
+    void pcmVolumeMute();
 
 };
 
-#endif // DCOPIFACE_H
+#endif // DBUSIFACE_H

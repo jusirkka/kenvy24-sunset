@@ -7,12 +7,23 @@ SET(kenvy24gui_SRCS
     kenvy24gui.cpp
     kenvy24dockwidget.cpp
     envycard.cpp
-    tabviewimpl.cpp
-    mastervolumeimpl.cpp
-    mixerinputimpl.cpp
-    peakmeterimpl.cpp
-    patchboximpl.cpp
-    dcopiface.cpp
+    tabview.cpp
+    mastervolume.cpp
+    mixerinput.cpp
+    peakmeter.cpp
+    patchbox.cpp
+    dbusiface.cpp
+)
+
+set(kenvy24gui_SRCS
+    ${kenvy24gui_SRCS}
+    ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24.xml
+)
+
+qt4_generate_dbus_interface(
+    dbusiface.h
+    org.kvanttiapina.kenvy24.xml
+    OPTIONS -M
 )
 
 
@@ -24,26 +35,27 @@ set(kenvy24gui_UI
     patchbox.ui
 )
 
-kde3_add_dcop_stubs(kenvy24gui_SRCS dcopiface.h)
-kde3_add_dcop_skels(kenvy24gui_SRCS dcopiface.h)
-
-kde3_automoc(${kenvy24gui_SRCS}})
-
-kde3_add_ui_files(kenvy24gui_SRCS ${kenvy24gui_UI})
+set(CMAKE_AUTOMOC TRUE)
 
 
-kde3_add_executable(kenvy24 main.cpp ${kenvy24gui_SRCS})
+#set_target_properties(${kenvy24gui_SRCS} PROPERTIES AUTOMOC TRUE)
 
-target_link_libraries(kenvy24 ${QT_AND_KDECORE_LIBS} ${ALSA_LIBRARY} kdeui kio DCOP)
+kde4_add_ui_files(kenvy24gui_SRCS ${kenvy24gui_UI})
+
+
+kde4_add_executable(kenvy24 main.cpp ${kenvy24gui_SRCS})
+
+target_link_libraries(kenvy24 ${QT_AND_KDECORE_LIBS} ${ALSA_LIBRARY})
 
 install(TARGETS kenvy24 DESTINATION bin)
 
 
 ########### install files ###############
 
-install(FILES  kenvy24ui.rc DESTINATION share/apps/kenvy24)
-install(FILES  kenvy24gui.png DESTINATION share/apps/kenvy24/pics)
-install(FILES  kenvy24.desktop DESTINATION share/applications/kde)
+install(FILES kenvy24ui.rc DESTINATION share/apps/kenvy24)
+install(FILES kenvy24gui.png DESTINATION share/apps/kenvy24/pics)
+install(FILES kenvy24.desktop DESTINATION share/applications/kde)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 
-kde3_install_icons(hicolor)
+kde4_install_icons(hicolor)
 

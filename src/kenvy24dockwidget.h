@@ -17,38 +17,31 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this program; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
 #ifndef KENVY24DOCKWIDGET_H
 #define KENVY24DOCKWIDGET_H
 
-class QFrame;
-class QString;
-#include <qwidget.h>
-#include <qvbox.h>
+class KEnvy24Window;
 
-#include <ksystemtray.h>
-
-class TabViewImpl;
-
-class KEnvy24DockWidget: public KSystemTray  {
-    Q_OBJECT
+#include <kstatusnotifieritem.h>
 
 
-public:
-    KEnvy24DockWidget(TabViewImpl* mixer, QWidget* parent = 0, const char *name = 0);
-    ~KEnvy24DockWidget();
+class KEnvy24DockWidget : public KStatusNotifierItem
+{
+   Q_OBJECT
 
 
-public slots:
+ public:
+   explicit KEnvy24DockWidget(KEnvy24Window *parent);
+   virtual ~KEnvy24DockWidget();
 
-protected:
+ public slots:
+   void activate(const QPoint &pos);
 
-private:
-    TabViewImpl* mMixerWin;
-
-private slots:
+ private:
+   KEnvy24Window* mParent;
 
 };
 

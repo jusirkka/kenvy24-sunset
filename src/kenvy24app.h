@@ -4,7 +4,7 @@
 #include <kuniqueapplication.h>
 
 class KEnvy24Window;
-class DCOPIface;
+class DBusIface;
 
 class KEnvy24App : public KUniqueApplication
 {
@@ -21,7 +21,7 @@ class KEnvy24App : public KUniqueApplication
 
     private:
         KEnvy24Window *mEnvy;
-        DCOPIface *mDCOP;
+        DBusIface *mDBus;
 };
 
 #endif // Kenvy24App_h

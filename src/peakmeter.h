@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2007 by Valentin Rusu                                   *
- *   kenvy24@rusu.info                                                     *
+ *   Copyright (C) 2007 by Valentin Rusu   *
+ *   kenvy24@rusu.info   *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -17,49 +17,35 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef _PEAKMETER_H_INCLUDED_
+#define _PEAKMETER_H_INCLUDED_
 
-#include "peakmeterimpl.h"
+#include <kled.h>
+#include <QWidget>
 
-#define L(x, y, z) mLeds.insert(x, led_##x); mLeds.insert(y, led_##y); mLeds.insert(z, led_##z)
+class PeakMeter : public QWidget {
+    Q_OBJECT
 
-PeakMeterImpl::PeakMeterImpl(QWidget* parent, const char* name) :
-        PeakMeter(parent, name),
-        mLeds(21),
-        mLevel(0),
-        mDischargeRate(5),
-        mDischargeStep(5) {
-    L(0, 1, 2);
-    L(3, 4, 5);
-    L(6, 7, 8);
-    L(9, 10, 11);
-    L(12, 13, 14);
-    L(15, 16, 17);
-    L(18, 19, 20);
-}
+public:
+    typedef QPtrVector<KLed> LedList;
 
+private:
 
-PeakMeterImpl::~PeakMeterImpl() {}
+    LedList mLeds;
+    int mLevel;
+    int mDischargeRate;
+    int mDischargeStep;
 
+public:
+    PeakMeter(QWidget* parent);
+    ~PeakMeter();
 
-void PeakMeterImpl::updatePeak(int peak) {
-    int upd = (peak * mLeds.size() + 128) / 255;
+    void updatePeak(int level);
 
-    if (upd > mLevel) {
-        mDischargeStep = mDischargeRate;
-        for (int i = mLevel; i < upd; i++) mLeds[i]->on();
-        mLevel = upd;
-    }
+public slots:
 
-    if (mLevel > 0) {
-        if (mDischargeStep == 0) {
-            mLeds[mLevel - 1]->off();
-            mLevel--;
-            mDischargeStep = mDischargeRate;
-        } else {
-            mDischargeStep--;
-        }
-    }
-}
+private:
 
+};
 
-#include "peakmeterimpl.moc"
+#endif // _PEAKMETER_H_INCLUDED_

@@ -17,19 +17,17 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _PATCHBOX_H_INCLUDED_
-#define _PATCHBOX_H_INCLUDED_
+#ifndef _MASTERVOLUME_H_INCLUDED_
+#define _MASTERVOLUME_H_INCLUDED_
 
-#include "patchbox.h"
 #include "envystructs.h"
+#include <QWidget>
 
-class EnvyCard;
 class KConfig;
+class EnvyCard;
 
-class PatchBoxImpl : public PatchBox {
+class MasterVolume : public QWidget {
     Q_OBJECT
-
-public:
 
 private:
     bool inSlotFlag;
@@ -45,40 +43,32 @@ private:
         }
     };
 
-    int mIndex;
-    QStringList mLSources;
-    QStringList mRSources;
-
 public:
-    PatchBoxImpl(QWidget* parent, const char* name = 0);
-    ~PatchBoxImpl();
 
-    void setup(int index);
-    void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
-    void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
-        
+
+    MasterVolume(QWidget* parent, const char * name =0);
+
+    void connectToCard(EnvyCard* envyCard);
+    void connectFromCard(EnvyCard* envyCard);
+
     void saveToConfig(KConfig*);
     void loadFromConfig(KConfig*);
 
+    void updatePeaks(StereoLevels level);
+
 public slots:
 
-    void updateRoute(int index, LeftRight channel, const QString& soundSource);
+    void analogUpdateDACVolume(LeftRight, int);
 
 protected:
-
-    virtual void leftPressed(int);
-    virtual void rightPressed(int);
     virtual void lockToggled(bool);
-
-private slots:
-
-    void leftNotified(int);
-    void rightNotified(int);
+    virtual void leftVolumeChanged(int);
+    virtual void rightVolumeChanged(int);
 
 signals:
 
-    void routeChanged(int index, LeftRight channel, const QString& soundSource);
-
+    void adjusted(LeftRight channel, int volume);
 };
 
-#endif // _PATCHBOX_H_INCLUDED_
+
+#endif // _MASTERVOLUME_H_INCLUDED_

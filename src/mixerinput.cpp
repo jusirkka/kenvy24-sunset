@@ -18,8 +18,8 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "peakmeterimpl.h"
-#include "mixerinputimpl.h"
+#include "peakmeter.h"
+#include "mixerinput.h"
 #include "envycard.h"
 #include "envystructs.h"
 
@@ -29,14 +29,14 @@
 #include <kconfig.h>
 #include <kdebug.h>
 
-MixerInputImpl::MixerInputImpl(QWidget* parent, const char * name) : MixerInput(parent, name) {}
+MixerInput::MixerInput(QWidget* parent) : QWidget(parent) {}
 
-void MixerInputImpl::setup(int index) {
+void MixerInput::setup(int index) {
     mIndex = index;
 }
 
 
-void MixerInputImpl::connectToCard(EnvyCard* envyCard, const QString& inout) {
+void MixerInput::connectToCard(EnvyCard* envyCard, const QString& inout) {
     if (inout == "capture") {
         connect(this, SIGNAL(muted(int, LeftRight, bool)),
                envyCard, SLOT(mixerMuteCaptureChannel(int, LeftRight, bool)));
@@ -59,7 +59,7 @@ void MixerInputImpl::connectToCard(EnvyCard* envyCard, const QString& inout) {
            envyCard, SLOT(setMixerPlaybackVolume(int, LeftRight, int, int)));
 }
 
-void MixerInputImpl::connectFromCard(EnvyCard* envyCard, const QString& inout) {
+void MixerInput::connectFromCard(EnvyCard* envyCard, const QString& inout) {
 
     if (inout == "capture") {
         connect(envyCard,SIGNAL(mixerUpdateAnalogInMuteSwitch(int,LeftRight,bool)),
@@ -84,12 +84,12 @@ void MixerInputImpl::connectFromCard(EnvyCard* envyCard, const QString& inout) {
 }
 
 
-void MixerInputImpl::updatePeaks(StereoLevels level) {
+void MixerInput::updatePeaks(StereoLevels level) {
     leftMeter->updatePeak(level.left);
     rightMeter->updatePeak(level.right);
 }
 
-void MixerInputImpl::saveToConfig(KConfig* config) {
+void MixerInput::saveToConfig(KConfig* config) {
     QString keyBase = name();
     config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isChecked());
 
@@ -104,7 +104,7 @@ void MixerInputImpl::saveToConfig(KConfig* config) {
     config->writeEntry(QString("%1-mute").arg(keyBase), checkMuteRight->isChecked());
 }
 
-void MixerInputImpl::loadFromConfig(KConfig* config) {
+void MixerInput::loadFromConfig(KConfig* config) {
     kdDebug() << k_funcinfo << "entering " << endl;
 
     QString keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
@@ -136,7 +136,7 @@ void MixerInputImpl::loadFromConfig(KConfig* config) {
 }
 
 
-void MixerInputImpl::mixerUpdateMuteSwitch(int index, LeftRight channel, bool muted) {
+void MixerInput::mixerUpdateMuteSwitch(int index, LeftRight channel, bool muted) {
 
     if (index != mIndex) return;
 
@@ -155,7 +155,7 @@ void MixerInputImpl::mixerUpdateMuteSwitch(int index, LeftRight channel, bool mu
 
 }
 
-void MixerInputImpl::mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement adj) {
+void MixerInput::mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement adj) {
 
     if (index != mIndex) return;
 
@@ -179,7 +179,7 @@ void MixerInputImpl::mixerUpdatePlaybackVolume(int index, LeftRight channel, Mix
 
 }
 
-void MixerInputImpl::leftMuteToggled(bool m) {
+void MixerInput::leftMuteToggled(bool m) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -191,7 +191,7 @@ void MixerInputImpl::leftMuteToggled(bool m) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::rightMuteToggled(bool m) {
+void MixerInput::rightMuteToggled(bool m) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -203,7 +203,7 @@ void MixerInputImpl::rightMuteToggled(bool m) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::leftVolumeChanged(int dispVal) {
+void MixerInput::leftVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     kdDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << leftStereo->value() << ")"<< endl;
@@ -218,7 +218,7 @@ void MixerInputImpl::leftVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::rightVolumeChanged(int dispVal) {
+void MixerInput::rightVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     kdDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << rightStereo->value() << ")"<< endl;
@@ -233,7 +233,7 @@ void MixerInputImpl::rightVolumeChanged(int dispVal) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::leftStereoChanged(int dispStereo) {
+void MixerInput::leftStereoChanged(int dispStereo) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     kdDebug() << k_funcinfo << "(volume, stereo) = (" << leftVolume->value() << ", " << dispStereo << ")"<< endl;
@@ -248,7 +248,7 @@ void MixerInputImpl::leftStereoChanged(int dispStereo) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::rightStereoChanged(int dispStereo) {
+void MixerInput::rightStereoChanged(int dispStereo) {
     kdDebug() << k_funcinfo << "entering" << endl;
     ExclusiveFlag inEvent(inEventFlag);
     kdDebug() << k_funcinfo << "(volume, stereo) = (" << rightVolume->value() << ", " << dispStereo << ")"<< endl;
@@ -263,7 +263,7 @@ void MixerInputImpl::rightStereoChanged(int dispStereo) {
     kdDebug() << k_funcinfo << "leaving" << endl;
 }
 
-void MixerInputImpl::lockToggled(bool locked) {
+void MixerInput::lockToggled(bool locked) {
     kdDebug() << k_funcinfo << "entering" << endl;
     if (locked) {
         connect(this, SIGNAL(notifyLeftVolume(int)), leftVolume, SLOT(setValue(int)));
@@ -283,4 +283,4 @@ void MixerInputImpl::lockToggled(bool locked) {
     kdDebug() << k_funcinfo << "leaving " << endl;
 }
 
-#include "mixerinputimpl.moc"
+#include "mixerinput.moc"

@@ -4,7 +4,6 @@
  *
  * Copyright (C) 2000 Stefan Schimanski <1Stein@gmx.de>
  * Copyright (C) 2001 Preston Brown <pbrown@kde.org>
- * Copyright (C) 2003 Sven Leiber <s.leiber@web.de>
  * Copyright (C) 2004 Christian Esken <esken@kde.org>
  *
  * This program is free software; you can redistribute it and/or
@@ -19,38 +18,33 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this program; if not, write to the Free
- * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-#include <kaction.h>
-#include <klocale.h>
-#include <kapplication.h>
-#include <kpanelapplet.h>
-#include <kpopupmenu.h>
-#include <kglobalsettings.h>
-#include <kdialog.h>
-#include <kaudioplayer.h>
-#include <kiconloader.h>
-#include <kdebug.h>
-#include <kwin.h>
 
-#include <qapplication.h>
-#include <qcursor.h>
-#include <qtooltip.h>
-#include <X11/Xlib.h>
-#include <fixx11h.h>
 
 #include "kenvy24dockwidget.h"
-#include "tabviewimpl.h"
+#include "kenvy24gui.h"
 
-KEnvy24DockWidget::KEnvy24DockWidget(TabViewImpl* mixer, QWidget *parent, const char *name):
-    KSystemTray(parent, name),
-    mMixerWin(mixer)
+KEnvy24DockWidget::KEnvy24DockWidget(KEnvy24Window* parent)
+    :KStatusNotifierItem(parent)
+    ,mParent(parent)
 {
-    setPixmap(loadIcon("kenvy24gui"));
+    setToolTipIconByName("kenvy24");
+    setTitle(i18n("Envy Card Mixer"));
+    setCategory(Hardware);
+    setStatus(Active);
 }
 
-KEnvy24DockWidget::~KEnvy24DockWidget() {}
+KEnvy24DockWidget::~KEnvy24DockWidget()
+{
+}
 
 
-#include "kenvy24dockwidget.moc"
+void KEnvy24DockWidget::activate(const QPoint&)
+{
+    if (mParent->isHidden()) mParent->show();
+    else mParent->hide();
+}
+
+

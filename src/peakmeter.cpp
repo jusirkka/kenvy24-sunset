@@ -1,6 +1,6 @@
 /***************************************************************************
- *   Copyright (C) 2007 by Valentin Rusu   *
- *   kenvy24@rusu.info   *
+ *   Copyright (C) 2007 by Valentin Rusu                                   *
+ *   kenvy24@rusu.info                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -18,41 +18,48 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "peakmeter.h"
 
-#include <kcmdlineargs.h>
-#include <kaboutdata.h>
-#include <klocale.h>
-#include <kglobal.h>
-#include <kstandarddirs.h>
+#define L(x, y, z) mLeds.insert(x, led_##x); mLeds.insert(y, led_##y); mLeds.insert(z, led_##z)
 
-#include "kenvy24app.h"
-#include "version.h"
-
-static const char description[] =
-    I18N_NOOP("VIA Envy24 based sound cards control utility. See http://kenvy24.wiki.sourceforge.net/ for the documentation");
-
-
-
-int main(int argc, char **argv)
-{
-    KCmdLineOptions options;
-    KAboutData about(
-        "kenvy24", 0,
-        ki18n("KEnvy24"), VERSION,
-        ki18n("The ICE1712 based cards KDE control panel"), KAboutData::License_GPL,
-        ki18n("(C) 2015 Jukka Sirkka"),
-        ki18n("Feedback:\njukka.sirkka@iki.fi\n\n(Build Date: " __DATE__ ")"),
-        ( "http://kenvy24.wiki.sourceforge.net/" )
-    );
-//    about.addAuthor("Valentin Rusu", 0, "kenvy24@rusu.info");
-    KCmdLineArgs::init(argc, argv, &about);
-    KCmdLineArgs::addCmdLineOptions(options);
-
-   if (!KEnvy24App::start()) return 0;
-
-   KEnvy24App *app = new KEnvy24App();
-   int ret = app->exec();
-   delete app;
-   return ret;
+PeakMeter::PeakMeter(QWidget* parent) :
+        QWidget(parent),
+        mLeds(21),
+        mLevel(0),
+        mDischargeRate(5),
+        mDischargeStep(5) {
+    L(0, 1, 2);
+    L(3, 4, 5);
+    L(6, 7, 8);
+    L(9, 10, 11);
+    L(12, 13, 14);
+    L(15, 16, 17);
+    L(18, 19, 20);
 }
 
+
+PeakMeter::~PeakMeter() {}
+
+
+void PeakMeter::updatePeak(int peak) {
+    int upd = (peak * mLeds.size() + 128) / 255;
+
+    if (upd > mLevel) {
+        mDischargeStep = mDischargeRate;
+        for (int i = mLevel; i < upd; i++) mLeds[i]->on();
+        mLevel = upd;
+    }
+
+    if (mLevel > 0) {
+        if (mDischargeStep == 0) {
+            mLeds[mLevel - 1]->off();
+            mLevel--;
+            mDischargeStep = mDischargeRate;
+        } else {
+            mDischargeStep--;
+        }
+    }
+}
+
+
+#include "peakmeter.moc"

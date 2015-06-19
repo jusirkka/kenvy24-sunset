@@ -17,36 +17,68 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _PEAKMETER_H_INCLUDED_
-#define _PEAKMETER_H_INCLUDED_
+#ifndef _PATCHBOX_H_INCLUDED_
+#define _PATCHBOX_H_INCLUDED_
 
-#include "peakmeter.h"
-#include <qptrvector.h>
-#include <kled.h>
+#include "envystructs.h"
+#include <QWidget>
 
-class PeakMeterImpl : public PeakMeter {
+class EnvyCard;
+class KConfig;
+
+class PatchBox : public QWidget {
     Q_OBJECT
 
 public:
-    typedef QPtrVector<KLed> LedList;
 
 private:
+    bool inSlotFlag;
+    bool inEventFlag;
 
-    LedList mLeds;
-    int mLevel;
-    int mDischargeRate;
-    int mDischargeStep;
+    struct ExclusiveFlag {
+        bool& slotFlag;
+        ExclusiveFlag(bool& flag) : slotFlag(flag) {
+            flag = true;
+        }
+        ~ExclusiveFlag() {
+            slotFlag = false;
+        }
+    };
+
+    int mIndex;
+    QStringList mLSources;
+    QStringList mRSources;
 
 public:
-    PeakMeterImpl(QWidget* parent, const char* name = 0);
-    ~PeakMeterImpl();
+    PatchBox(QWidget* parent);
+    ~PatchBox();
 
-    void updatePeak(int level);
+    void setup(int index);
+    void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
+    void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
+        
+    void saveToConfig(KConfig*);
+    void loadFromConfig(KConfig*);
 
 public slots:
 
-private:
+    void updateRoute(int index, LeftRight channel, const QString& soundSource);
+
+protected:
+
+    virtual void leftPressed(int);
+    virtual void rightPressed(int);
+    virtual void lockToggled(bool);
+
+private slots:
+
+    void leftNotified(int);
+    void rightNotified(int);
+
+signals:
+
+    void routeChanged(int index, LeftRight channel, const QString& soundSource);
 
 };
 
-#endif // _PEAKMETER_H_INCLUDED_
+#endif // _PATCHBOX_H_INCLUDED_

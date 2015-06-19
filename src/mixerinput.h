@@ -17,19 +17,20 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _MASTERVOLUME_H_INCLUDED_
-#define _MASTERVOLUME_H_INCLUDED_
+#ifndef _MIXERINPUT_H_INCLUDED_
+#define _MIXERINPUT_H_INCLUDED_
 
 #include "envystructs.h"
-#include "mastervolume.h"
+#include <QWidget>
 
 class KConfig;
 class EnvyCard;
 
-class MasterVolumeImpl : public MasterVolume {
+class MixerInput : public QWidget {
     Q_OBJECT
 
 private:
+    int mIndex;
     bool inSlotFlag;
     bool inEventFlag;
 
@@ -46,11 +47,13 @@ private:
 public:
 
 
-    MasterVolumeImpl(QWidget* parent, const char * name =0);
+    MixerInput(QWidget* parent, const char* name = 0);
 
-    void connectToCard(EnvyCard* envyCard);
-    void connectFromCard(EnvyCard* envyCard);
 
+    void setup(int index);
+    void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
+    void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
+        
     void saveToConfig(KConfig*);
     void loadFromConfig(KConfig*);
 
@@ -58,17 +61,24 @@ public:
 
 public slots:
 
-    void analogUpdateDACVolume(LeftRight, int);
+    void mixerUpdateMuteSwitch(int, LeftRight, bool);
+    void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
 
 protected:
+
     virtual void lockToggled(bool);
+    virtual void leftMuteToggled(bool);
+    virtual void rightMuteToggled(bool);
     virtual void leftVolumeChanged(int);
     virtual void rightVolumeChanged(int);
+    virtual void leftStereoChanged(int);
+    virtual void rightStereoChanged(int);
 
 signals:
 
-    void adjusted(LeftRight channel, int volume);
+    void muted(int index, LeftRight channel, bool m);
+    void adjusted(int index, LeftRight channel, int volume, int stereo);
 };
 
 
-#endif // _MASTERVOLUME_H_INCLUDED_
+#endif // _MIXERINPUT_H_INCLUDED_
