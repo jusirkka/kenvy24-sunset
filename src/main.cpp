@@ -25,7 +25,7 @@
 #include <kglobal.h>
 #include <kstandarddirs.h>
 
-#include "kenvy24app.h"
+#include "kenvy24.h"
 #include "version.h"
 
 static const char description[] =

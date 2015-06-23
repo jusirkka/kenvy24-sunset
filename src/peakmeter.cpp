@@ -18,16 +18,20 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "ui_peakmeter.h"
 #include "peakmeter.h"
 
-#define L(x, y, z) mLeds.insert(x, led_##x); mLeds.insert(y, led_##y); mLeds.insert(z, led_##z)
+#define L(x, y, z) mLeds.insert(x, mUI->led_##x); mLeds.insert(y, mUI->led_##y); mLeds.insert(z, mUI->led_##z)
 
 PeakMeter::PeakMeter(QWidget* parent) :
         QWidget(parent),
-        mLeds(21),
+        mUI(new Ui::PeakMeter),
         mLevel(0),
         mDischargeRate(5),
         mDischargeStep(5) {
+
+    mUI->setupUi(this);
+
     L(0, 1, 2);
     L(3, 4, 5);
     L(6, 7, 8);
@@ -38,7 +42,9 @@ PeakMeter::PeakMeter(QWidget* parent) :
 }
 
 
-PeakMeter::~PeakMeter() {}
+PeakMeter::~PeakMeter() {
+    delete mUI;
+}
 
 
 void PeakMeter::updatePeak(int peak) {

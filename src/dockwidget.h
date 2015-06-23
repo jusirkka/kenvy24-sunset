@@ -23,25 +23,25 @@
 #ifndef KENVY24DOCKWIDGET_H
 #define KENVY24DOCKWIDGET_H
 
-class KEnvy24Window;
+class MainWindow;
 
 #include <kstatusnotifieritem.h>
 
 
-class KEnvy24DockWidget : public KStatusNotifierItem
+class DockWidget : public KStatusNotifierItem
 {
    Q_OBJECT
 
 
  public:
-   explicit KEnvy24DockWidget(KEnvy24Window *parent);
-   virtual ~KEnvy24DockWidget();
+   explicit DockWidget(MainWindow *parent);
+   virtual ~DockWidget();
 
  public slots:
    void activate(const QPoint &pos);
 
  private:
-   KEnvy24Window* mParent;
+   MainWindow* mParent;
 
 };
 

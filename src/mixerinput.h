@@ -22,9 +22,14 @@
 
 #include "envystructs.h"
 #include <QWidget>
+#include <ksharedconfig.h>
 
 class KConfig;
 class EnvyCard;
+
+namespace Ui {
+class MixerInput;
+}
 
 class MixerInput : public QWidget {
     Q_OBJECT
@@ -44,18 +49,20 @@ private:
         }
     };
 
+    Ui::MixerInput* mUI;
+
 public:
 
 
-    MixerInput(QWidget* parent, const char* name = 0);
-
+    MixerInput(QWidget* parent);
+    ~MixerInput();
 
     void setup(int index);
     void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
     void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
         
-    void saveToConfig(KConfig*);
-    void loadFromConfig(KConfig*);
+    void saveToConfig(KSharedConfigPtr);
+    void loadFromConfig(KSharedConfigPtr);
 
     void updatePeaks(StereoLevels level);
 
@@ -64,20 +71,24 @@ public slots:
     void mixerUpdateMuteSwitch(int, LeftRight, bool);
     void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
 
-protected:
-
-    virtual void lockToggled(bool);
-    virtual void leftMuteToggled(bool);
-    virtual void rightMuteToggled(bool);
-    virtual void leftVolumeChanged(int);
-    virtual void rightVolumeChanged(int);
-    virtual void leftStereoChanged(int);
-    virtual void rightStereoChanged(int);
+    void lockToggled(bool);
+    void leftMuteToggled(bool);
+    void rightMuteToggled(bool);
+    void leftVolumeChanged(int);
+    void rightVolumeChanged(int);
+    void leftStereoChanged(int);
+    void rightStereoChanged(int);
 
 signals:
 
     void muted(int index, LeftRight channel, bool m);
     void adjusted(int index, LeftRight channel, int volume, int stereo);
+    void notifyRightMute(bool);
+    void notifyLeftMute(bool);
+    void notifyRightVolume(bool);
+    void notifyLeftVolume(bool);
+    void notifyRightStereo(bool);
+    void notifyLeftStereo(bool);
 };
 
 

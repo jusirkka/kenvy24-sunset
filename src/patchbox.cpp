@@ -18,6 +18,7 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
+#include "ui_patchbox.h"
 #include "patchbox.h"
 #include "envycard.h"
 
@@ -27,22 +28,22 @@
 #include <kconfig.h>
 #include <kdebug.h>
 
-PatchBox::PatchBox(QWidget* parent): QWidget(parent)
+PatchBox::PatchBox(QWidget* parent): QWidget(parent), mUI(new Ui::PatchBox)
 {
-    mLSources << "1" << "2" << "3" << "4" << "5";
-    mRSources << "1" << "2" << "3" << "4" << "5";
+    mUI->setupUi(this);
 
-    mLSources[leftSelection->id(mixer_l)] = QString(R_SRC_MIXER);
-    mLSources[leftSelection->id(analog_l)] = QString(R_SRC_ANALOG);
-    mLSources[leftSelection->id(digital_ll)] = QString(R_SRC_DIGITAL_L);
-    mLSources[leftSelection->id(digital_lr)] = QString(R_SRC_DIGITAL_R);
-    mLSources[leftSelection->id(pcm_l)] = QString(R_SRC_PCM);
 
-    mRSources[rightSelection->id(mixer_r)] = QString(R_SRC_MIXER);
-    mRSources[rightSelection->id(analog_r)] = QString(R_SRC_ANALOG);
-    mRSources[rightSelection->id(digital_rl)] = QString(R_SRC_DIGITAL_L);
-    mRSources[rightSelection->id(digital_rr)] = QString(R_SRC_DIGITAL_R);
-    mRSources[rightSelection->id(pcm_r)] = QString(R_SRC_PCM);
+    mLSources[R_SRC_MIXER] = mUI->mixer_l;
+    mLSources[QString(R_SRC_ANALOG)] = mUI->analog_l;
+    mLSources[R_SRC_DIGITAL_L] = mUI->digital_ll;
+    mLSources[R_SRC_DIGITAL_R] = mUI->digital_lr;
+    mLSources[R_SRC_PCM] = mUI->pcm_l;
+
+    mRSources[R_SRC_MIXER] = mUI->mixer_r;
+    mRSources[R_SRC_ANALOG] = mUI->analog_r;
+    mRSources[R_SRC_DIGITAL_L] = mUI->digital_rl;
+    mRSources[R_SRC_DIGITAL_R] = mUI->digital_rr;
+    mRSources[R_SRC_PCM] = mUI->pcm_r;
 }
 
 PatchBox::~PatchBox() {}
@@ -74,7 +75,7 @@ void PatchBox::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
                          SLOT(updateRoute(int, LeftRight, const QString&)));
 }
         
-void PatchBox::saveToConfig(KConfig* config) {
+void PatchBox::saveToConfig(KSharedConfigPtr config) {
     QString keyBase = name();
     config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isChecked());
 
@@ -85,8 +86,8 @@ void PatchBox::saveToConfig(KConfig* config) {
     config->writeEntry(QString("%1-route").arg(keyBase), rightSelection->selectedId());
 }
 
-void PatchBox::loadFromConfig(KConfig* config) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+void PatchBox::loadFromConfig(KSharedConfigPtr* config) {
+    kDebug() << k_funcinfo << "entering";
 
     QString keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
     int btn = config->readNumEntry(QString("%1-route").arg(keyBase));
@@ -101,84 +102,84 @@ void PatchBox::loadFromConfig(KConfig* config) {
     keyBase = name();
     checkLock->setChecked(config->readBoolEntry(QString("%1-locked").arg(keyBase)));
 
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::updateRoute(int index, LeftRight channel, const QString& soundSource) {
     if (index != mIndex) return;
 
-    kdDebug() << k_funcinfo << "entering " << endl;
+    kDebug() << k_funcinfo << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         if (channel == LEFT) {
-            kdDebug() << k_funcinfo << "set left " << soundSource << endl;
-            leftSelection->setButton(mLSources.findIndex(soundSource));
+            kDebug() << k_funcinfo << "set left " << soundSource;
+            mLSources[soundSource]->setChecked(true);
         } else {
-            kdDebug() << k_funcinfo << "set right " << soundSource << endl;
-            rightSelection->setButton(mRSources.findIndex(soundSource));
+            kDebug() << k_funcinfo << "set right " << soundSource;
+            mRSources[soundSource]->setChecked(true);
         }
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::leftPressed(int btn) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kdDebug() << k_funcinfo << "notify card " << mLSources[btn] << endl;
+        kDebug() << k_funcinfo << "notify card " << mLSources[btn];
         emit routeChanged(mIndex, LEFT, mLSources[btn]);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::rightPressed(int btn) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kdDebug() << k_funcinfo << "notify card " << mRSources[btn] << endl;
+        kDebug() << k_funcinfo << "notify card " << mRSources[btn];
         emit routeChanged(mIndex, RIGHT, mRSources[btn]);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::leftNotified(int btn) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     QString searchTerm = mRSources[btn];
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kdDebug() << k_funcinfo << "set selection " << searchTerm << endl;
+    kDebug() << k_funcinfo << "set selection " << searchTerm;
     leftSelection->setButton(mLSources.findIndex(searchTerm));
 
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "notify card " <<  searchTerm << endl;
+    kDebug() << k_funcinfo << "notify card " <<  searchTerm;
     emit routeChanged(mIndex, LEFT, searchTerm);
 
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::rightNotified(int btn) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     QString searchTerm = mLSources[btn];
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kdDebug() << k_funcinfo << "set selection " << searchTerm << endl;
+    kDebug() << k_funcinfo << "set selection " << searchTerm;
     rightSelection->setButton(mRSources.findIndex(searchTerm));
 
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "notify card " <<  searchTerm << endl;
+    kDebug() << k_funcinfo << "notify card " <<  searchTerm;
     emit routeChanged(mIndex, RIGHT, searchTerm);
 
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::lockToggled(bool locked) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     if (locked) {
         connect(leftSelection, SIGNAL(pressed(int)), this, SLOT(rightNotified(int)));
         connect(rightSelection, SIGNAL(pressed(int)), this, SLOT(leftNotified(int)));
@@ -186,7 +187,7 @@ void PatchBox::lockToggled(bool locked) {
         disconnect(leftSelection, SIGNAL(pressed(int)), this, SLOT(rightNotified(int)));
         disconnect(rightSelection, SIGNAL(pressed(int)), this, SLOT(leftNotified(int)));
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 

@@ -3,11 +3,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${KD
 ########### next target ###############
 
 SET(kenvy24gui_SRCS
-    kenvy24app.cpp
-    kenvy24gui.cpp
-    kenvy24dockwidget.cpp
+    mainwindow.cpp
+    kenvy24.cpp
+    dockwidget.cpp
     envycard.cpp
-    tabview.cpp
     mastervolume.cpp
     mixerinput.cpp
     peakmeter.cpp
@@ -28,7 +27,7 @@ qt4_generate_dbus_interface(
 
 
 set(kenvy24gui_UI
-    tabview.ui
+    mainwindow.ui
     mastervolume.ui
     mixerinput.ui
     peakmeter.ui

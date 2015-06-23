@@ -20,8 +20,8 @@
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "kenvy24app.h"
-#include "kenvy24gui.h"
+#include "kenvy24.h"
+#include "mainwindow.h"
 #include <kdebug.h>
 #include "dbusiface.h"
 
@@ -36,12 +36,12 @@ KEnvy24App::~KEnvy24App() {
 int KEnvy24App::newInstance() {
     if (mEnvy) return KUniqueApplication::newInstance();
 
-    mEnvy = new KEnvy24Window;
+    mEnvy = new MainWindow;
     mDBus = new DBusIface(this);
 
-    connect(mDBus, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(slotPCMVolumeUp()));
-    connect(mDBus, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(slotPCMVolumeDown()));
-    connect(mDBus, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(slotPCMVolumeMute()));
+    connect(mDBus, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(on_dbus_PCMVolumeUp()));
+    connect(mDBus, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(on_dbus_PCMVolumeDown()));
+    connect(mDBus, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(on_dbus_PCMVolumeMute()));
 
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);
@@ -51,4 +51,4 @@ int KEnvy24App::newInstance() {
 }
 
 
-#include "kenvy24app.moc"
+#include "kenvy24.moc"

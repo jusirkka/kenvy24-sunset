@@ -23,14 +23,20 @@
 #include <kled.h>
 #include <QWidget>
 
+namespace Ui {
+class PeakMeter;
+}
+
+
 class PeakMeter : public QWidget {
     Q_OBJECT
 
 public:
-    typedef QPtrVector<KLed> LedList;
+    typedef QList<KLed*> LedList;
 
 private:
 
+    Ui::PeakMeter* mUI;
     LedList mLeds;
     int mLevel;
     int mDischargeRate;
@@ -45,6 +51,7 @@ public:
 public slots:
 
 private:
+
 
 };
 

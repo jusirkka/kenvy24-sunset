@@ -20,6 +20,7 @@
 
 #include "peakmeter.h"
 #include "mixerinput.h"
+#include "ui_mixerinput.h"
 #include "envycard.h"
 #include "envystructs.h"
 
@@ -29,7 +30,13 @@
 #include <kconfig.h>
 #include <kdebug.h>
 
-MixerInput::MixerInput(QWidget* parent) : QWidget(parent) {}
+MixerInput::MixerInput(QWidget* parent) : QWidget(parent), mUI(new Ui::MixerInput) {
+    mUI->setupUi(this);
+}
+
+MixerInput::~MixerInput() {
+    delete mUI;
+}
 
 void MixerInput::setup(int index) {
     mIndex = index;
@@ -85,54 +92,57 @@ void MixerInput::connectFromCard(EnvyCard* envyCard, const QString& inout) {
 
 
 void MixerInput::updatePeaks(StereoLevels level) {
-    leftMeter->updatePeak(level.left);
-    rightMeter->updatePeak(level.right);
+    mUI->leftMeter->updatePeak(level.left);
+    mUI->rightMeter->updatePeak(level.right);
 }
 
-void MixerInput::saveToConfig(KConfig* config) {
-    QString keyBase = name();
-    config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isChecked());
+void MixerInput::saveToConfig(KSharedConfigPtr config) {
+    KConfigGroup volGroup(config, QString("%1-%2").arg(objectName()).arg(mIndex));
+    volGroup.writeEntry("locked", mUI->checkLock->isChecked());
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
-    config->writeEntry(QString("%1-vol").arg(keyBase), leftVolume->value());
-    config->writeEntry(QString("%1-stereo").arg(keyBase), leftStereo->value());
-    config->writeEntry(QString("%1-mute").arg(keyBase), checkMuteLeft->isChecked());
+    volGroup.writeEntry("left-volume", mUI->leftVolume->value());
+    volGroup.writeEntry("left-stereo", mUI->leftStereo->value());
+    volGroup.writeEntry("left-mute", mUI->checkMuteLeft->isChecked());
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(RIGHT);
-    config->writeEntry(QString("%1-vol").arg(keyBase), rightVolume->value());
-    config->writeEntry(QString("%1-stereo").arg(keyBase), rightStereo->value());
-    config->writeEntry(QString("%1-mute").arg(keyBase), checkMuteRight->isChecked());
+    volGroup.writeEntry("right-volume", mUI->rightVolume->value());
+    volGroup.writeEntry("right-stereo", mUI->rightStereo->value());
+    volGroup.writeEntry("right-mute", mUI->checkMuteRight->isChecked());
+
 }
 
-void MixerInput::loadFromConfig(KConfig* config) {
-    kdDebug() << k_funcinfo << "entering " << endl;
+void MixerInput::loadFromConfig(KSharedConfigPtr config) {
+    kDebug() << k_funcinfo << "entering ";
 
-    QString keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
-    int val = config->readNumEntry(QString("%1-stereo").arg(keyBase));
-    leftStereo->setValue(val);
-    leftStereoChanged(val);
-    val = config->readNumEntry(QString("%1-vol").arg(keyBase));
-    leftVolume->setValue(val);
+    KConfigGroup volGroup(config, QString("%1-%2").arg(objectName()).arg(mIndex));
+
+    int val = volGroup.readEntry("left-volume").toInt();
+    mUI->leftVolume->setValue(val);
     leftVolumeChanged(val);
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(RIGHT);
-    val = config->readNumEntry(QString("%1-stereo").arg(keyBase));
-    rightStereo->setValue(val);
-    rightStereoChanged(val);
-    val = config->readNumEntry(QString("%1-vol").arg(keyBase));
-    rightVolume->setValue(val);
+    val = volGroup.readEntry("left-stereo").toInt();
+    mUI->leftStereo->setValue(val);
+    leftStereoChanged(val);
+
+    val = volGroup.readEntry("right-volume").toInt();
+    mUI->rightVolume->setValue(val);
     rightVolumeChanged(val);
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
-    checkMuteLeft->setChecked(config->readBoolEntry(QString("%1-mute").arg(keyBase)));
+    val = volGroup.readEntry("right-stereo").toInt();
+    mUI->rightStereo->setValue(val);
+    rightStereoChanged(val);
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(RIGHT);
-    checkMuteRight->setChecked(config->readBoolEntry(QString("%1-mute").arg(keyBase)));
 
-    keyBase = name();
-    checkLock->setChecked(config->readBoolEntry(QString("%1-locked").arg(keyBase)));
+    bool muted = volGroup.readEntry("left-mute").toInt();
+    mUI->checkMuteLeft->setChecked(muted);
 
-    kdDebug() << k_funcinfo << "leaving " << endl;
+    muted = volGroup.readEntry("right-mute").toInt();
+    mUI->checkMuteRight->setChecked(muted);
+
+
+    bool locked = volGroup.readEntry("locked").toInt();
+    mUI->checkLock->setChecked(locked);
+
+    kDebug() << k_funcinfo << "leaving ";
 }
 
 
@@ -140,18 +150,18 @@ void MixerInput::mixerUpdateMuteSwitch(int index, LeftRight channel, bool muted)
 
     if (index != mIndex) return;
 
-    kdDebug() << k_funcinfo << "entering " << endl;
+    kDebug() << k_funcinfo << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         if (channel == LEFT) {
-            kdDebug() << k_funcinfo << "set left" << endl;
-            checkMuteLeft->setChecked(muted);
+            kDebug() << k_funcinfo << "set left";
+            mUI->checkMuteLeft->setChecked(muted);
         } else {
-            kdDebug() << k_funcinfo << "set right" << endl;
-            checkMuteRight->setChecked(muted);
+            kDebug() << k_funcinfo << "set right";
+            mUI->checkMuteRight->setChecked(muted);
         }
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 
 }
 
@@ -159,128 +169,128 @@ void MixerInput::mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAd
 
     if (index != mIndex) return;
 
-    kdDebug() << k_funcinfo << "entering " << endl;
+    kDebug() << k_funcinfo << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         int dispVol = 96 - adj.volume;
         int dispStereo =  96 - adj.stereo;
-        kdDebug() << k_funcinfo << "(volume, stereo) = (" << dispVol << ", " << dispStereo << ")"<< endl;
+        kDebug() << k_funcinfo << "(volume, stereo) = (" << dispVol << ", " << dispStereo << ")"<< endl;
         if (channel == LEFT) {
-            kdDebug() << k_funcinfo << "set left" << endl;
-            leftStereo->setValue(dispStereo);
-            leftVolume->setValue(dispVol);
+            kDebug() << k_funcinfo << "set left";
+            mUI->leftStereo->setValue(dispStereo);
+            mUI->leftVolume->setValue(dispVol);
         } else {
-            kdDebug() << k_funcinfo << "set right" << endl;
-            rightStereo->setValue(dispStereo);
-            rightVolume->setValue(dispVol);
+            kDebug() << k_funcinfo << "set right";
+            mUI->rightStereo->setValue(dispStereo);
+            mUI->rightVolume->setValue(dispVol);
         }
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 
 }
 
 void MixerInput::leftMuteToggled(bool m) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        kDebug() << k_funcinfo << "notify card";
         emit muted(mIndex, LEFT, m);
-        kdDebug() << k_funcinfo << "notify right" << endl;
+        kDebug() << k_funcinfo << "notify right";
         emit notifyRightMute(m);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::rightMuteToggled(bool m) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        kDebug() << k_funcinfo << "notify card";
         emit muted(mIndex, RIGHT, m);
-        kdDebug() << k_funcinfo << "notify left" << endl;
+        kDebug() << k_funcinfo << "notify left";
         emit notifyLeftMute(m);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::leftVolumeChanged(int dispVal) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << leftStereo->value() << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << mUI->leftStereo->value() << ")"<< endl;
     if (!inSlotFlag) {
         int vol = 96 - dispVal;
-        int stereo = 96 - leftStereo->value();
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        int stereo = 96 - mUI->leftStereo->value();
+        kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, LEFT, vol, stereo);
-        kdDebug() << k_funcinfo << "notify right" << endl;
+        kDebug() << k_funcinfo << "notify right";
         emit notifyRightVolume(dispVal);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::rightVolumeChanged(int dispVal) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << rightStereo->value() << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << mUI->rightStereo->value() << ")"<< endl;
     if (!inSlotFlag) {
         int vol = 96 - dispVal;
-        int stereo = 96 - rightStereo->value();
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        int stereo = 96 - mUI->rightStereo->value();
+        kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, RIGHT, vol, stereo);
-        kdDebug() << k_funcinfo << "notify left" << endl;
+        kDebug() << k_funcinfo << "notify left";
         emit notifyLeftVolume(dispVal);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::leftStereoChanged(int dispStereo) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "(volume, stereo) = (" << leftVolume->value() << ", " << dispStereo << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->leftVolume->value() << ", " << dispStereo << ")"<< endl;
     if (!inSlotFlag) {
-        int vol = 96 - leftVolume->value();
+        int vol = 96 - mUI->leftVolume->value();
         int stereo = 96 - dispStereo;
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, LEFT, vol, stereo);
-        kdDebug() << k_funcinfo << "notify right" << endl;
+        kDebug() << k_funcinfo << "notify right";
         emit notifyRightStereo(dispStereo);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::rightStereoChanged(int dispStereo) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
-    kdDebug() << k_funcinfo << "(volume, stereo) = (" << rightVolume->value() << ", " << dispStereo << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->rightVolume->value() << ", " << dispStereo << ")"<< endl;
     if (!inSlotFlag) {
-        int vol = 96 - rightVolume->value();
+        int vol = 96 - mUI->rightVolume->value();
         int stereo = 96 - dispStereo;
-        kdDebug() << k_funcinfo << "notify card" << endl;
+        kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, RIGHT, vol, stereo);
-        kdDebug() << k_funcinfo << "notify left" << endl;
+        kDebug() << k_funcinfo << "notify left";
         emit notifyLeftStereo(dispStereo);
     }
-    kdDebug() << k_funcinfo << "leaving" << endl;
+    kDebug() << k_funcinfo << "leaving";
 }
 
 void MixerInput::lockToggled(bool locked) {
-    kdDebug() << k_funcinfo << "entering" << endl;
+    kDebug() << k_funcinfo << "entering";
     if (locked) {
-        connect(this, SIGNAL(notifyLeftVolume(int)), leftVolume, SLOT(setValue(int)));
-        connect(this, SIGNAL(notifyRightVolume(int)), rightVolume, SLOT(setValue(int)));
-        connect(this, SIGNAL(notifyLeftStereo(int)), leftStereo, SLOT(setValue(int)));
-        connect(this, SIGNAL(notifyRightStereo(int)), rightStereo, SLOT(setValue(int)));
-        connect(this, SIGNAL(notifyLeftMute(bool)), checkMuteLeft, SLOT(setChecked(bool)));
-        connect(this, SIGNAL(notifyRightMute(bool)), checkMuteRight, SLOT(setChecked(bool)));
+        connect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftVolume, SLOT(setValue(int)));
+        connect(this, SIGNAL(notifyRightVolume(int)), mUI->rightVolume, SLOT(setValue(int)));
+        connect(this, SIGNAL(notifyLeftStereo(int)), mUI->leftStereo, SLOT(setValue(int)));
+        connect(this, SIGNAL(notifyRightStereo(int)), mUI->rightStereo, SLOT(setValue(int)));
+        connect(this, SIGNAL(notifyLeftMute(bool)), mUI->checkMuteLeft, SLOT(setChecked(bool)));
+        connect(this, SIGNAL(notifyRightMute(bool)), mUI->checkMuteRight, SLOT(setChecked(bool)));
     } else {
-        disconnect(this, SIGNAL(notifyLeftVolume(int)), leftVolume, SLOT(setValue(int)));
-        disconnect(this, SIGNAL(notifyRightVolume(int)), rightVolume, SLOT(setValue(int)));
-        disconnect(this, SIGNAL(notifyLeftStereo(int)), leftStereo, SLOT(setValue(int)));
-        disconnect(this, SIGNAL(notifyRightStereo(int)), rightStereo, SLOT(setValue(int)));
-        disconnect(this, SIGNAL(notifyLeftMute(bool)), checkMuteLeft, SLOT(setChecked(bool)));
-        disconnect(this, SIGNAL(notifyRightMute(bool)), checkMuteRight, SLOT(setChecked(bool)));
+        disconnect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftVolume, SLOT(setValue(int)));
+        disconnect(this, SIGNAL(notifyRightVolume(int)), mUI->rightVolume, SLOT(setValue(int)));
+        disconnect(this, SIGNAL(notifyLeftStereo(int)), mUI->leftStereo, SLOT(setValue(int)));
+        disconnect(this, SIGNAL(notifyRightStereo(int)), mUI->rightStereo, SLOT(setValue(int)));
+        disconnect(this, SIGNAL(notifyLeftMute(bool)), mUI->checkMuteLeft, SLOT(setChecked(bool)));
+        disconnect(this, SIGNAL(notifyRightMute(bool)), mUI->checkMuteRight, SLOT(setChecked(bool)));
     }
-    kdDebug() << k_funcinfo << "leaving " << endl;
+    kDebug() << k_funcinfo << "leaving ";
 }
 
 #include "mixerinput.moc"

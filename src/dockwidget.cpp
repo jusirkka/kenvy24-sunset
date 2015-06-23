@@ -21,12 +21,12 @@
  * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <klocalizedstring.h>
 
+#include "mainwindow.h"
+#include "dockwidget.h"
 
-#include "kenvy24dockwidget.h"
-#include "kenvy24gui.h"
-
-KEnvy24DockWidget::KEnvy24DockWidget(KEnvy24Window* parent)
+DockWidget::DockWidget(MainWindow* parent)
     :KStatusNotifierItem(parent)
     ,mParent(parent)
 {
@@ -36,12 +36,12 @@ KEnvy24DockWidget::KEnvy24DockWidget(KEnvy24Window* parent)
     setStatus(Active);
 }
 
-KEnvy24DockWidget::~KEnvy24DockWidget()
+DockWidget::~DockWidget()
 {
 }
 
 
-void KEnvy24DockWidget::activate(const QPoint&)
+void DockWidget::activate(const QPoint&)
 {
     if (mParent->isHidden()) mParent->show();
     else mParent->hide();

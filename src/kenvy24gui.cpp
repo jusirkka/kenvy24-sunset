@@ -23,12 +23,10 @@
 #include <qlabel.h>
 
 #include <kmainwindow.h>
-#include <kstdaction.h>
-// #include <kactionclasses.h>
+#include <kstandardaction.h>
 #include <kapplication.h>
 #include <klocale.h>
 #include <kmenubar.h>
-// #include <kpopupmenu.h>
 #include <kmessagebox.h>
 #include <kdebug.h>
 #include <qslider.h>
@@ -40,14 +38,16 @@
 #include "envystructs.h"
 
 KEnvy24Window::KEnvy24Window()
-    : KMainWindow(0, "KEnvy24", WDestructiveClose),
+    : KMainWindow(),
       mShuttingDown(false)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
+
     mainView = new TabView(this);
 
     // Actions
-    KStdAction::quit(this, SLOT(slotQuit()), actionCollection());
-    (void) new KAction("Disable levels", 0, mainView, SLOT(enableLevels()), actionCollection(), "enable_levels");
+    KStandardAction::quit(this, SLOT(slotQuit()), actionCollection());
+    (void) new QAction("Disable levels", 0, mainView, SLOT(enableLevels()), actionCollection(), "enable_levels");
 
     setStandardToolBarMenuEnabled(false);
 

@@ -22,9 +22,15 @@
 
 #include "envystructs.h"
 #include <QWidget>
+#include <QRadioButton>
+#include <ksharedconfig.h>
 
 class EnvyCard;
 class KConfig;
+
+namespace Ui {
+class PatchBox;
+}
 
 class PatchBox : public QWidget {
     Q_OBJECT
@@ -45,9 +51,10 @@ private:
         }
     };
 
+    Ui::PatchBox* mUI;
     int mIndex;
-    QStringList mLSources;
-    QStringList mRSources;
+    QHash<QString, QRadioButton*> mLSources;
+    QHash<QString, QRadioButton*> mRSources;
 
 public:
     PatchBox(QWidget* parent);
@@ -57,8 +64,8 @@ public:
     void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
     void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
         
-    void saveToConfig(KConfig*);
-    void loadFromConfig(KConfig*);
+    void saveToConfig(KSharedConfigPtr);
+    void loadFromConfig(KSharedConfigPtr);
 
 public slots:
 

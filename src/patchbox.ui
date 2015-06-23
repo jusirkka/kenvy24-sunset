@@ -1,297 +1,265 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0" stdsetdef="1">
-  <author></author>
-  <comment></comment>
-  <exportmacro></exportmacro>
-  <class>PatchBox</class>
-  <widget class="QWidget" name="PatchBox">
-    <property name="geometry">
-      <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>379</width>
-        <height>246</height>
-      </rect>
-    </property>
-    <property name="windowTitle">
-      <string>PatchBox</string>
-    </property>
-    <layout class="QVBoxLayout">
+<ui version="4.0">
+ <class>PatchBox</class>
+ <widget class="QWidget" name="PatchBox">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>379</width>
+    <height>282</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PatchBox</string>
+  </property>
+  <layout class="QVBoxLayout">
+   <item>
+    <widget class="QGroupBox" name="patchGroup">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Generic Out</string>
+     </property>
+     <layout class="QVBoxLayout">
       <item>
-        <widget class="Q3GroupBox" name="patchGroup">
+       <layout class="QHBoxLayout">
+        <item>
+         <widget class="QGroupBox" name="leftSelection">
           <property name="sizePolicy">
-            <sizepolicy>
-              <hsizetype>7</hsizetype>
-              <vsizetype>7</vsizetype>
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-            </sizepolicy>
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
           <property name="title">
-            <string>Generic Out</string>
+           <string>Left</string>
           </property>
           <layout class="QVBoxLayout">
-            <item>
-              <layout class="QHBoxLayout">
-                <item>
-                  <widget class="Q3ButtonGroup" name="leftSelection">
-                    <property name="sizePolicy">
-                      <sizepolicy>
-                        <hsizetype>7</hsizetype>
-                        <vsizetype>7</vsizetype>
-                        <horstretch>1</horstretch>
-                        <verstretch>0</verstretch>
-                      </sizepolicy>
-                    </property>
-                    <property name="title">
-                      <string>Left</string>
-                    </property>
-                    <layout class="QVBoxLayout">
-                      <item>
-                        <widget class="QRadioButton" name="mixer_l">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Mi&amp;xer Left</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+X</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="pcm_l">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>PCM Left</string>
-                          </property>
-                          <property name="shortcut">
-                            <string/>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="analog_l">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>&amp;Analog In Left</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+A</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="digital_ll">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Digital I&amp;n Left</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+N</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="digital_lr">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Digital In Right</string>
-                          </property>
-                          <property name="shortcut">
-                            <string/>
-                          </property>
-                        </widget>
-                      </item>
-                    </layout>
-                  </widget>
-                </item>
-                <item>
-                  <widget class="Q3ButtonGroup" name="rightSelection">
-                    <property name="sizePolicy">
-                      <sizepolicy>
-                        <hsizetype>7</hsizetype>
-                        <vsizetype>7</vsizetype>
-                        <horstretch>1</horstretch>
-                        <verstretch>0</verstretch>
-                      </sizepolicy>
-                    </property>
-                    <property name="title">
-                      <string>Right</string>
-                    </property>
-                    <layout class="QVBoxLayout">
-                      <item>
-                        <widget class="QRadioButton" name="mixer_r">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Mi&amp;xer Right</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+X</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="pcm_r">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>PCM Right</string>
-                          </property>
-                          <property name="shortcut">
-                            <string/>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="analog_r">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Anal&amp;og In Right</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+O</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="digital_rr">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Digital I&amp;n Right</string>
-                          </property>
-                          <property name="shortcut">
-                            <string>Alt+N</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item>
-                        <widget class="QRadioButton" name="digital_rl">
-                          <property name="sizePolicy">
-                            <sizepolicy>
-                              <hsizetype>7</hsizetype>
-                              <vsizetype>0</vsizetype>
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                            </sizepolicy>
-                          </property>
-                          <property name="text">
-                            <string>Digital In Left</string>
-                          </property>
-                          <property name="shortcut">
-                            <string/>
-                          </property>
-                        </widget>
-                      </item>
-                    </layout>
-                  </widget>
-                </item>
-              </layout>
-            </item>
-            <item>
-              <widget class="QCheckBox" name="checkLock">
-                <property name="sizePolicy">
-                  <sizepolicy>
-                    <hsizetype>7</hsizetype>
-                    <vsizetype>0</vsizetype>
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                  </sizepolicy>
-                </property>
-                <property name="text">
-                  <string>Loc&amp;k</string>
-                </property>
-                <property name="shortcut">
-                  <string>Alt+K</string>
-                </property>
-              </widget>
-            </item>
+           <item>
+            <widget class="QRadioButton" name="mixer_l">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Mi&amp;xer Left</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+X</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="pcm_l">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>PCM Left</string>
+             </property>
+             <property name="shortcut">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="analog_l">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>&amp;Analog In Left</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+A</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="digital_ll">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Digital I&amp;n Left</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+N</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="digital_lr">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Digital In Right</string>
+             </property>
+             <property name="shortcut">
+              <string/>
+             </property>
+            </widget>
+           </item>
           </layout>
-        </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="rightSelection">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>1</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="title">
+           <string>Right</string>
+          </property>
+          <layout class="QVBoxLayout">
+           <item>
+            <widget class="QRadioButton" name="mixer_r">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Mi&amp;xer Right</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+X</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="pcm_r">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>PCM Right</string>
+             </property>
+             <property name="shortcut">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="analog_r">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Anal&amp;og In Right</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+O</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="digital_rr">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Digital I&amp;n Right</string>
+             </property>
+             <property name="shortcut">
+              <string>Alt+N</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="digital_rl">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Digital In Left</string>
+             </property>
+             <property name="shortcut">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </item>
-    </layout>
-  </widget>
-  <layoutdefault spacing="6" margin="11"/>
-  <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
-  <connections>
-    <connection>
-      <sender>leftSelection</sender>
-      <signal>pressed(int)</signal>
-      <receiver>PatchBox</receiver>
-      <slot>leftPressed(int)</slot>
-    </connection>
-    <connection>
-      <sender>rightSelection</sender>
-      <signal>pressed(int)</signal>
-      <receiver>PatchBox</receiver>
-      <slot>rightPressed(int)</slot>
-    </connection>
-    <connection>
-      <sender>checkLock</sender>
-      <signal>toggled(bool)</signal>
-      <receiver>PatchBox</receiver>
-      <slot>lockToggled(bool)</slot>
-    </connection>
-  </connections>
+      <item>
+       <widget class="QCheckBox" name="checkLock">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Loc&amp;k</string>
+        </property>
+        <property name="shortcut">
+         <string>Alt+K</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>checkLock</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>PatchBox</receiver>
+   <slot>lockToggled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

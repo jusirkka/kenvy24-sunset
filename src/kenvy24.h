@@ -3,7 +3,7 @@
 
 #include <kuniqueapplication.h>
 
-class KEnvy24Window;
+class MainWindow;
 class DBusIface;
 
 class KEnvy24App : public KUniqueApplication
@@ -20,7 +20,7 @@ class KEnvy24App : public KUniqueApplication
         void stopUpdatesOnVisibility();
 
     private:
-        KEnvy24Window *mEnvy;
+        MainWindow *mEnvy;
         DBusIface *mDBus;
 };
 

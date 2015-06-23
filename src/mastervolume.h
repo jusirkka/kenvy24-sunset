@@ -22,9 +22,13 @@
 
 #include "envystructs.h"
 #include <QWidget>
+#include <ksharedconfig.h>
 
-class KConfig;
 class EnvyCard;
+
+namespace Ui {
+class MasterVolume;
+}
 
 class MasterVolume : public QWidget {
     Q_OBJECT
@@ -43,16 +47,20 @@ private:
         }
     };
 
+
+    Ui::MasterVolume *mUI;
+
 public:
 
 
-    MasterVolume(QWidget* parent, const char * name =0);
+    MasterVolume(QWidget* parent);
+    ~MasterVolume();
 
     void connectToCard(EnvyCard* envyCard);
     void connectFromCard(EnvyCard* envyCard);
 
-    void saveToConfig(KConfig*);
-    void loadFromConfig(KConfig*);
+    void saveToConfig(KSharedConfigPtr);
+    void loadFromConfig(KSharedConfigPtr);
 
     void updatePeaks(StereoLevels level);
 
@@ -60,14 +68,15 @@ public slots:
 
     void analogUpdateDACVolume(LeftRight, int);
 
-protected:
-    virtual void lockToggled(bool);
-    virtual void leftVolumeChanged(int);
-    virtual void rightVolumeChanged(int);
+    void lockToggled(bool);
+    void leftVolumeChanged(int);
+    void rightVolumeChanged(int);
 
 signals:
 
     void adjusted(LeftRight channel, int volume);
+    void notifyRightVolume(int);
+    void notifyLeftVolume(int);
 };
 
 

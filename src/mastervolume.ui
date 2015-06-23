@@ -32,7 +32,7 @@
         <number>0</number>
       </property>
       <item>
-        <widget class="Q3ButtonGroup" name="masterGroup">
+        <widget class="QGroupBox" name="masterGroup">
           <property name="sizePolicy">
             <sizepolicy>
               <hsizetype>7</hsizetype>
@@ -82,7 +82,7 @@
                           </widget>
                         </item>
                         <item>
-                          <widget class="PeakMeterImpl" name="leftMeter">
+                          <widget class="PeakMeter" name="leftMeter">
                             <property name="sizePolicy">
                               <sizepolicy>
                                 <hsizetype>7</hsizetype>
@@ -135,7 +135,7 @@
                           <number>0</number>
                         </property>
                         <item>
-                          <widget class="PeakMeterImpl" name="rightMeter">
+                          <widget class="PeakMeter" name="rightMeter">
                             <property name="sizePolicy">
                               <sizepolicy>
                                 <hsizetype>7</hsizetype>
@@ -226,9 +226,9 @@
   <layoutdefault spacing="6" margin="11"/>
   <customwidgets>
     <customwidget>
-      <class>PeakMeterImpl</class>
+      <class>PeakMeter</class>
       <extends>QWidget</extends>
-      <header location="local">peakmeterimpl.h</header>
+      <header location="local">peakmeter.h</header>
       <sizehint>
         <width>-1</width>
         <height>-1</height>
@@ -247,8 +247,8 @@
     </image>
   </images>
   <includes>
-    <include location="local">peakmeterimpl.h</include>
-    <include location="local">peakmeterimpl.h</include>
+    <include location="local">peakmeter.h</include>
+    <include location="local">peakmeter.h</include>
   </includes>
   <connections>
     <connection>

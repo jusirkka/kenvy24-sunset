@@ -26,8 +26,10 @@
 #include <alsa/asoundlib.h>
 #include <string>
 #include <vector>
-#include <qstringlist.h>
-#include <qptrlist.h>
+#include <QStringList>
+#include <QList>
+#include <QHash>
+#include <QVector>
 #include "envystructs.h"
 
 class QSocketNotifier;
@@ -36,8 +38,8 @@ class EnvyCard : public QObject {
     Q_OBJECT
 public:
 
-    typedef QMemArray<StereoLevels> PeakList;
-    typedef QMemArray<int> IndexList;
+    typedef QVector<StereoLevels> PeakList;
+    typedef QList<int> IndexList;
 
 private:
 
@@ -65,21 +67,16 @@ private:
     snd_ctl_t               *ctl;
     int                     cardNumber;
     std::string             cardName;
-    bool                    cardIsDMX6FIRE;
     ice1712_eeprom_t        card_eeprom;
     snd_ctl_elem_value_t    *peaks;
     bool                    outputActive[ MAX_OUTPUT_CHANNELS ];
     int                     outChannels;
     bool                    outputSPDIFActive[ MAX_SPDIF_CHANNELS ];
     int                     spdifChannels;
-    std::vector< QSocketNotifier* >     eventNotifiers;
+    QList<QSocketNotifier*> eventNotifiers;
     PeakList mPeaks;
     QStringList mRoutes;
-    QString mConfigInternalClock;
-    QString mConfigClockDefault;
-    QString mConfigDeemphasis;
-    QStringList mConfigEnumVars;
-    QPtrList<QStringList> mConfigEnums;
+    QHash<QString, QStringList> mConfigEnums;
 
     class SndCtlElemValue {
     public:
