@@ -24,12 +24,12 @@
 // Local includes.
 
 #include "dbusiface.h"
-#include "dbusifaceadaptor.h"
+#include "kenvy24adaptor.h"
 
 DBusIface::DBusIface(QObject *parent)
          : QObject(parent)
 {
-    new DBusIfaceAdaptor(this);
+    new Kenvy24Adaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
     dbus.registerObject("/kenvy24", this);
     dbus.registerService("org.kvanttiapina.kenvy24");

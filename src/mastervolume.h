@@ -50,6 +50,8 @@ private:
 
     Ui::MasterVolume *mUI;
 
+    int mLRDiff;
+
 public:
 
 
@@ -68,9 +70,9 @@ public slots:
 
     void analogUpdateDACVolume(LeftRight, int);
 
-    void lockToggled(bool);
-    void leftVolumeChanged(int);
-    void rightVolumeChanged(int);
+    void on_checkLock_toggled(bool);
+    void on_rightSlider_valueChanged(int);
+    void on_leftSlider_valueChanged(int);
 
 signals:
 

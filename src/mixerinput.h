@@ -50,6 +50,8 @@ private:
     };
 
     Ui::MixerInput* mUI;
+    int mVDelta;
+    int mSDelta;
 
 public:
 
@@ -58,6 +60,7 @@ public:
     ~MixerInput();
 
     void setup(int index);
+    void setTitle(const QString&);
     void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
     void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
         
@@ -71,13 +74,14 @@ public slots:
     void mixerUpdateMuteSwitch(int, LeftRight, bool);
     void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
 
-    void lockToggled(bool);
-    void leftMuteToggled(bool);
-    void rightMuteToggled(bool);
-    void leftVolumeChanged(int);
-    void rightVolumeChanged(int);
-    void leftStereoChanged(int);
-    void rightStereoChanged(int);
+    void on_leftVolume_valueChanged(int);
+    void on_leftStereo_valueChanged(int);
+    void on_rightVolume_valueChanged(int);
+    void on_rightStereo_valueChanged(int);
+
+    void on_checkMuteLeft_toggled(bool);
+    void on_checkMuteRight_toggled(bool);
+    void on_checkLock_toggled(bool);
 
 signals:
 
@@ -85,10 +89,10 @@ signals:
     void adjusted(int index, LeftRight channel, int volume, int stereo);
     void notifyRightMute(bool);
     void notifyLeftMute(bool);
-    void notifyRightVolume(bool);
-    void notifyLeftVolume(bool);
-    void notifyRightStereo(bool);
-    void notifyLeftStereo(bool);
+    void notifyRightVolume(int);
+    void notifyLeftVolume(int);
+    void notifyRightStereo(int);
+    void notifyLeftStereo(int);
 };
 
 

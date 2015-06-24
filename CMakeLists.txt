@@ -6,13 +6,14 @@ set(CMAKE_INSTALL_PREFIX /usr)
 project(KEnvy24)
 
 find_package(KDE4 REQUIRED)
+include(KDE4Defaults)
+
 find_package(ALSA REQUIRED)
 
 add_definitions(${QT_DEFINITIONS} ${KDE4_DEFINITIONS} -D_DEFAULT_SOURCE)
 
 include_directories( 
-    ${KDE4_INCLUDE_DIR}
-    ${QT_INCLUDES}  
+    ${KDE4_INCLUDES}
     ${ALSA_INCLUDE_DIR}
 )
 

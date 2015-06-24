@@ -32,6 +32,8 @@
 
 MixerInput::MixerInput(QWidget* parent) : QWidget(parent), mUI(new Ui::MixerInput) {
     mUI->setupUi(this);
+    mVDelta = 0;
+    mSDelta = 0;
 }
 
 MixerInput::~MixerInput() {
@@ -40,6 +42,10 @@ MixerInput::~MixerInput() {
 
 void MixerInput::setup(int index) {
     mIndex = index;
+}
+
+void MixerInput::setTitle(const QString& title) {
+    mUI->inputGroup->setTitle(title);
 }
 
 
@@ -117,19 +123,19 @@ void MixerInput::loadFromConfig(KSharedConfigPtr config) {
 
     int val = volGroup.readEntry("left-volume").toInt();
     mUI->leftVolume->setValue(val);
-    leftVolumeChanged(val);
+    on_leftVolume_valueChanged(val);
 
     val = volGroup.readEntry("left-stereo").toInt();
     mUI->leftStereo->setValue(val);
-    leftStereoChanged(val);
+    on_leftStereo_valueChanged(val);
 
     val = volGroup.readEntry("right-volume").toInt();
     mUI->rightVolume->setValue(val);
-    rightVolumeChanged(val);
+    on_rightVolume_valueChanged(val);
 
     val = volGroup.readEntry("right-stereo").toInt();
     mUI->rightStereo->setValue(val);
-    rightStereoChanged(val);
+    on_rightStereo_valueChanged(val);
 
 
     bool muted = volGroup.readEntry("left-mute").toInt();
@@ -140,6 +146,15 @@ void MixerInput::loadFromConfig(KSharedConfigPtr config) {
 
 
     bool locked = volGroup.readEntry("locked").toInt();
+
+    if (locked) {
+        mVDelta = mUI->leftVolume->value() - mUI->rightVolume->value();
+        mSDelta = mUI->leftStereo->value() - mUI->rightStereo->value();
+    } else {
+        mVDelta = 0;
+        mSDelta = 0;
+    }
+
     mUI->checkLock->setChecked(locked);
 
     kDebug() << k_funcinfo << "leaving ";
@@ -189,7 +204,7 @@ void MixerInput::mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAd
 
 }
 
-void MixerInput::leftMuteToggled(bool m) {
+void MixerInput::on_checkMuteLeft_toggled(bool m) {
     kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -201,7 +216,7 @@ void MixerInput::leftMuteToggled(bool m) {
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::rightMuteToggled(bool m) {
+void MixerInput::on_checkMuteRight_toggled(bool m) {
     kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
@@ -213,69 +228,121 @@ void MixerInput::rightMuteToggled(bool m) {
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::leftVolumeChanged(int dispVal) {
+void MixerInput::on_leftVolume_valueChanged(int left) {
     kDebug() << k_funcinfo << "entering";
+
+    int right = left - mVDelta;
+    if (right < 0) {
+        mUI->leftVolume->setValue(mVDelta);
+        return;
+    }
+
+    if (right > 96) {
+        mUI->leftVolume->setValue(96 + mVDelta);
+        return;
+    }
+
+
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << mUI->leftStereo->value() << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << left << ", " << mUI->leftStereo->value() << ")"<< endl;
     if (!inSlotFlag) {
-        int vol = 96 - dispVal;
+        int vol = 96 - left;
         int stereo = 96 - mUI->leftStereo->value();
         kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, LEFT, vol, stereo);
         kDebug() << k_funcinfo << "notify right";
-        emit notifyRightVolume(dispVal);
+        emit notifyRightVolume(right);
     }
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::rightVolumeChanged(int dispVal) {
+void MixerInput::on_rightVolume_valueChanged(int right) {
     kDebug() << k_funcinfo << "entering";
+
+    int left = right + mVDelta;
+    if (left < 0) {
+        mUI->rightVolume->setValue(-mVDelta);
+        return;
+    }
+
+    if (left > 96) {
+        mUI->rightVolume->setValue(96 - mVDelta);
+        return;
+    }
+
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "(volume, stereo) = (" << dispVal << ", " << mUI->rightStereo->value() << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << right << ", " << mUI->rightStereo->value() << ")"<< endl;
     if (!inSlotFlag) {
-        int vol = 96 - dispVal;
+        int vol = 96 - right;
         int stereo = 96 - mUI->rightStereo->value();
         kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, RIGHT, vol, stereo);
         kDebug() << k_funcinfo << "notify left";
-        emit notifyLeftVolume(dispVal);
+        emit notifyLeftVolume(left);
     }
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::leftStereoChanged(int dispStereo) {
+void MixerInput::on_leftStereo_valueChanged(int left) {
     kDebug() << k_funcinfo << "entering";
+
+    int right = left - mSDelta;
+    if (right < 0) {
+        mUI->leftStereo->setValue(mSDelta);
+        return;
+    }
+
+    if (right > 96) {
+        mUI->leftStereo->setValue(96 + mSDelta);
+        return;
+    }
+
+
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->leftVolume->value() << ", " << dispStereo << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->leftVolume->value() << ", " << left << ")"<< endl;
     if (!inSlotFlag) {
         int vol = 96 - mUI->leftVolume->value();
-        int stereo = 96 - dispStereo;
+        int stereo = 96 - left;
         kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, LEFT, vol, stereo);
         kDebug() << k_funcinfo << "notify right";
-        emit notifyRightStereo(dispStereo);
+        emit notifyRightStereo(right);
     }
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::rightStereoChanged(int dispStereo) {
+void MixerInput::on_rightStereo_valueChanged(int right) {
     kDebug() << k_funcinfo << "entering";
+
+    int left = right + mSDelta;
+    if (left < 0) {
+        mUI->rightStereo->setValue(-mSDelta);
+        return;
+    }
+
+    if (left > 96) {
+        mUI->rightStereo->setValue(96 - mSDelta);
+        return;
+    }
+
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->rightVolume->value() << ", " << dispStereo << ")"<< endl;
+    kDebug() << k_funcinfo << "(volume, stereo) = (" << mUI->rightVolume->value() << ", " << right << ")"<< endl;
     if (!inSlotFlag) {
         int vol = 96 - mUI->rightVolume->value();
-        int stereo = 96 - dispStereo;
+        int stereo = 96 - right;
         kDebug() << k_funcinfo << "notify card";
         emit adjusted(mIndex, RIGHT, vol, stereo);
         kDebug() << k_funcinfo << "notify left";
-        emit notifyLeftStereo(dispStereo);
+        emit notifyLeftStereo(left);
     }
     kDebug() << k_funcinfo << "leaving";
 }
 
-void MixerInput::lockToggled(bool locked) {
+void MixerInput::on_checkLock_toggled(bool locked) {
     kDebug() << k_funcinfo << "entering";
     if (locked) {
+        mVDelta = mUI->leftVolume->value() - mUI->rightVolume->value();
+        mSDelta = mUI->leftStereo->value() - mUI->rightStereo->value();
         connect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftVolume, SLOT(setValue(int)));
         connect(this, SIGNAL(notifyRightVolume(int)), mUI->rightVolume, SLOT(setValue(int)));
         connect(this, SIGNAL(notifyLeftStereo(int)), mUI->leftStereo, SLOT(setValue(int)));
@@ -283,6 +350,8 @@ void MixerInput::lockToggled(bool locked) {
         connect(this, SIGNAL(notifyLeftMute(bool)), mUI->checkMuteLeft, SLOT(setChecked(bool)));
         connect(this, SIGNAL(notifyRightMute(bool)), mUI->checkMuteRight, SLOT(setChecked(bool)));
     } else {
+        mVDelta = 0;
+        mSDelta = 0;
         disconnect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftVolume, SLOT(setValue(int)));
         disconnect(this, SIGNAL(notifyRightVolume(int)), mUI->rightVolume, SLOT(setValue(int)));
         disconnect(this, SIGNAL(notifyLeftStereo(int)), mUI->leftStereo, SLOT(setValue(int)));

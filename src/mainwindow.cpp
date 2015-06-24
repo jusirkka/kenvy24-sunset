@@ -20,18 +20,23 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QButtonGroup>
 
-#include <QtDebug>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QInputDialog>
-#include <QFile>
-#include <QCloseEvent>
-#include <QSettings>
-#include <QUndoStack>
-#include <QApplication>
-#include <QImageReader>
+#define L_MASTER 0
+#define L_PCM 1
+#define L_ANALOG_IN 2
+#define L_DIGITAL_IN 3
 
+#define ENUM_RATE320 "32000"
+#define ENUM_RATE441 "44100"
+#define ENUM_RATE480 "48000"
+#define ENUM_RATE882 "88200"
+#define ENUM_RATE960 "96000"
+#define ENUM_IEC958 "IEC958 Input"
+#define ENUM_DOFF "Off"
+#define ENUM_D320 "32kHz"
+#define ENUM_D441 "44.1kHz"
+#define ENUM_D480 "48kHz"
 
 
 MainWindow::MainWindow():
@@ -46,9 +51,51 @@ MainWindow::MainWindow():
     mUI->profiles->addAction(mUI->actionRenameProfile);
     mUI->profiles->addAction(mUI->actionDeleteProfile);
 
+    mUI->mixerPCM1->setTitle("PCM Playback");
+    mUI->mixerPCM1->setup(0);
+    mUI->mixerAnalogIn->setTitle("Analog In");
+    mUI->mixerAnalogIn->setup(0);
+    mUI->mixerDigitalIn->setTitle("Digital In");
+    mUI->mixerDigitalIn->setup(0);
+
+    mUI->analogOut->setTitle("Analog Out");
+    mUI->analogOut->setup(0);
+    mUI->digitalOut->setTitle("Digital Out");
+    mUI->digitalOut->setup(0);
+
+    mLevelIndices[L_MASTER] = 20;
+    mLevelIndices[L_PCM] = 0;
+    mLevelIndices[L_ANALOG_IN] = 10;
+    mLevelIndices[L_DIGITAL_IN] = 12;
+
+    setupHWTab();
+
+
     readSettings();
 }
 
+void MainWindow::setupHWTab() {
+
+    mHWInternalG = new QButtonGroup;
+
+    mHWInternal[ENUM_RATE320] = 0;
+    mHWInternalG->addButton(mUI->xtal320, 0);
+
+    mHWInternal[ENUM_RATE441] = 1;
+    mHWInternalG->addButton(mUI->xtal441, 1);
+
+    mHWInternal[ENUM_RATE480] = 2;
+    mHWInternalG->addButton(mUI->xtal480, 2);
+
+    mHWInternal[ENUM_RATE882] = 3;
+    mHWInternalG->addButton(mUI->xtal882, 3);
+
+    mHWInternal[ENUM_RATE960] = 4;
+    mHWInternalG->addButton(mUI->xtal960, 4);
+
+    connect(mHWInternalG, SIGNAL(buttonClicked(int)), this, SLOT(leftPressed(int)));
+
+}
 
 void MainWindow::closeEvent(QCloseEvent*) {}
 
@@ -58,7 +105,7 @@ void MainWindow::on_actionSaveProfile_triggered() {}
 void MainWindow::on_actionDeleteProfile_triggered() {}
 void MainWindow::on_actionRenameProfile_triggered() {}
 
-void MainWindow::on_actionLedsEnabled_toggled(bool) {}
+void MainWindow::on_actionEnableLeds_toggled(bool) {}
 
 void MainWindow::on_actionQuit_triggered() {}
 void MainWindow::on_actionClose_triggered() {}
@@ -66,12 +113,15 @@ void MainWindow::on_actionClose_triggered() {}
 
 void MainWindow::readSettings() {}
 
-void writeSettings() {}
+void MainWindow::writeSettings() {}
 
+void MainWindow::dbus_PCMVolumeUp() {}
+void MainWindow::dbus_PCMVolumeDown() {}
+void MainWindow::dbus_PCMVolumeMute() {}
 
 
 MainWindow::~MainWindow() {
     delete mUI;
 }
 
-// #include "mainwindow.moc"
+#include "mainwindow.moc"

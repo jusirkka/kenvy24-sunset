@@ -24,9 +24,11 @@
 #include <klocale.h>
 #include <kglobal.h>
 #include <kstandarddirs.h>
+#include <kdebug.h>
 
 #include "kenvy24.h"
 #include "version.h"
+
 
 static const char description[] =
     I18N_NOOP("VIA Envy24 based sound cards control utility. See http://kenvy24.wiki.sourceforge.net/ for the documentation");
@@ -35,6 +37,7 @@ static const char description[] =
 
 int main(int argc, char **argv)
 {
+    kDebug() << "starting";
     KCmdLineOptions options;
     KAboutData about(
         "kenvy24", 0,

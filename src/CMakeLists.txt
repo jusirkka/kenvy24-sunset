@@ -25,6 +25,11 @@ qt4_generate_dbus_interface(
     OPTIONS -M
 )
 
+qt4_add_dbus_adaptor(kenvy24gui_SRCS
+    ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24.xml
+    dbusiface.h
+    DBusIface
+)
 
 set(kenvy24gui_UI
     mainwindow.ui
@@ -44,7 +49,7 @@ kde4_add_ui_files(kenvy24gui_SRCS ${kenvy24gui_UI})
 
 kde4_add_executable(kenvy24 main.cpp ${kenvy24gui_SRCS})
 
-target_link_libraries(kenvy24 ${QT_AND_KDECORE_LIBS} ${ALSA_LIBRARY})
+target_link_libraries(kenvy24 ${KDE4_KDEUI_LIBS} ${ALSA_LIBRARY})
 
 install(TARGETS kenvy24 DESTINATION bin)
 

@@ -39,9 +39,9 @@ int KEnvy24App::newInstance() {
     mEnvy = new MainWindow;
     mDBus = new DBusIface(this);
 
-    connect(mDBus, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(on_dbus_PCMVolumeUp()));
-    connect(mDBus, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(on_dbus_PCMVolumeDown()));
-    connect(mDBus, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(on_dbus_PCMVolumeMute()));
+    connect(mDBus, SIGNAL(signalPCMVolumeUp()), mEnvy, SLOT(dbus_PCMVolumeUp()));
+    connect(mDBus, SIGNAL(signalPCMVolumeDown()), mEnvy, SLOT(dbus_PCMVolumeDown()));
+    connect(mDBus, SIGNAL(signalPCMVolumeMute()), mEnvy, SLOT(dbus_PCMVolumeMute()));
 
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);

@@ -27,6 +27,7 @@
 
 class EnvyCard;
 class KConfig;
+class QButtonGroup;
 
 namespace Ui {
 class PatchBox;
@@ -53,13 +54,16 @@ private:
 
     Ui::PatchBox* mUI;
     int mIndex;
-    QHash<QString, QRadioButton*> mLSources;
-    QHash<QString, QRadioButton*> mRSources;
+    QHash<QString, int> mLSources;
+    QHash<QString, int> mRSources;
+    QButtonGroup* mLGroup;
+    QButtonGroup* mRGroup;
 
 public:
     PatchBox(QWidget* parent);
     ~PatchBox();
 
+    void setTitle(const QString&);
     void setup(int index);
     void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
     void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
@@ -71,16 +75,13 @@ public slots:
 
     void updateRoute(int index, LeftRight channel, const QString& soundSource);
 
-protected:
-
-    virtual void leftPressed(int);
-    virtual void rightPressed(int);
-    virtual void lockToggled(bool);
-
 private slots:
 
     void leftNotified(int);
     void rightNotified(int);
+    void leftPressed(int);
+    void rightPressed(int);
+    void lockToggled(bool);
 
 signals:
 

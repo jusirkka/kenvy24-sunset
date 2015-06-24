@@ -22,31 +22,63 @@
 #include "patchbox.h"
 #include "envycard.h"
 
-#include <qbuttongroup.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
+#include <QButtonGroup>
 #include <kconfig.h>
 #include <kdebug.h>
 
-PatchBox::PatchBox(QWidget* parent): QWidget(parent), mUI(new Ui::PatchBox)
+PatchBox::PatchBox(QWidget* parent):
+    QWidget(parent),
+    mUI(new Ui::PatchBox),
+    mLGroup(new QButtonGroup),
+    mRGroup(new QButtonGroup)
 {
     mUI->setupUi(this);
 
 
-    mLSources[R_SRC_MIXER] = mUI->mixer_l;
-    mLSources[QString(R_SRC_ANALOG)] = mUI->analog_l;
-    mLSources[R_SRC_DIGITAL_L] = mUI->digital_ll;
-    mLSources[R_SRC_DIGITAL_R] = mUI->digital_lr;
-    mLSources[R_SRC_PCM] = mUI->pcm_l;
+    mLSources[R_SRC_MIXER] = 0;
+    mLGroup->addButton(mUI->mixer_l, 0);
 
-    mRSources[R_SRC_MIXER] = mUI->mixer_r;
-    mRSources[R_SRC_ANALOG] = mUI->analog_r;
-    mRSources[R_SRC_DIGITAL_L] = mUI->digital_rl;
-    mRSources[R_SRC_DIGITAL_R] = mUI->digital_rr;
-    mRSources[R_SRC_PCM] = mUI->pcm_r;
+    mLSources[R_SRC_ANALOG] = 1;
+    mLGroup->addButton(mUI->analog_l, 1);
+
+    mLSources[R_SRC_DIGITAL_L] = 2;
+    mLGroup->addButton(mUI->digital_ll, 2);
+
+    mLSources[R_SRC_DIGITAL_R] = 3;
+    mLGroup->addButton(mUI->digital_lr, 3);
+
+    mLSources[R_SRC_PCM] = 4;
+    mLGroup->addButton(mUI->pcm_l, 4);
+
+    mRSources[R_SRC_MIXER] = 0;
+    mRGroup->addButton(mUI->mixer_r, 0);
+
+    mRSources[R_SRC_ANALOG] = 1;
+    mRGroup->addButton(mUI->analog_r, 1);
+
+    mRSources[R_SRC_DIGITAL_L] = 2;
+    mRGroup->addButton(mUI->digital_rl, 2);
+
+    mRSources[R_SRC_DIGITAL_R] = 3;
+    mRGroup->addButton(mUI->digital_rr, 3);
+
+    mRSources[R_SRC_PCM] = 4;
+    mRGroup->addButton(mUI->pcm_r, 4);
+
+    connect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftPressed(int)));
+    connect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightPressed(int)));
 }
 
-PatchBox::~PatchBox() {}
+
+void PatchBox::setTitle(const QString& title) {
+    mUI->patchGroup->setTitle(title);
+}
+
+PatchBox::~PatchBox() {
+    delete mLGroup;
+    delete mRGroup;
+    delete mUI;
+}
 
 
 void PatchBox::setup(int index) {
@@ -76,31 +108,27 @@ void PatchBox::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
 }
         
 void PatchBox::saveToConfig(KSharedConfigPtr config) {
-    QString keyBase = name();
-    config->writeEntry(QString("%1-locked").arg(keyBase), checkLock->isChecked());
-
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
-    config->writeEntry(QString("%1-route").arg(keyBase), leftSelection->selectedId());
-
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(RIGHT);
-    config->writeEntry(QString("%1-route").arg(keyBase), rightSelection->selectedId());
+    KConfigGroup volGroup(config, objectName());
+    volGroup.writeEntry("locked", mUI->checkLock->isChecked());
+    volGroup.writeEntry(QString("left-route-%1").arg(mIndex), mLGroup->checkedId());
+    volGroup.writeEntry(QString("right-route-%1").arg(mIndex), mRGroup->checkedId());
 }
 
-void PatchBox::loadFromConfig(KSharedConfigPtr* config) {
+void PatchBox::loadFromConfig(KSharedConfigPtr config) {
     kDebug() << k_funcinfo << "entering";
 
-    QString keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(LEFT);
-    int btn = config->readNumEntry(QString("%1-route").arg(keyBase));
-    leftSelection->setButton(btn);
-    leftPressed(btn);
+    KConfigGroup volGroup(config, objectName());
 
-    keyBase = QString("%1-%2-%3").arg(name()).arg(mIndex).arg(RIGHT);
-    btn = config->readNumEntry(QString("%1-route").arg(keyBase));
-    rightSelection->setButton(btn);
-    rightPressed(btn);
+    int id = volGroup.readEntry(QString("left-route-%1").arg(mIndex)).toInt();
+    mLGroup->button(id)->setChecked(true);
+    leftPressed(id);
 
-    keyBase = name();
-    checkLock->setChecked(config->readBoolEntry(QString("%1-locked").arg(keyBase)));
+    id = volGroup.readEntry(QString("right-route-%1").arg(mIndex)).toInt();
+    mRGroup->button(id)->setChecked(true);
+    rightPressed(id);
+
+    bool locked = volGroup.readEntry("locked").toInt();
+    mUI->checkLock->setChecked(locked);
 
     kDebug() << k_funcinfo << "leaving";
 }
@@ -113,10 +141,10 @@ void PatchBox::updateRoute(int index, LeftRight channel, const QString& soundSou
     if (!inEventFlag) {
         if (channel == LEFT) {
             kDebug() << k_funcinfo << "set left " << soundSource;
-            mLSources[soundSource]->setChecked(true);
+            mLGroup->button(mLSources[soundSource])->setChecked(true);
         } else {
             kDebug() << k_funcinfo << "set right " << soundSource;
-            mRSources[soundSource]->setChecked(true);
+            mRGroup->button(mRSources[soundSource])->setChecked(true);
         }
     }
     kDebug() << k_funcinfo << "leaving";
@@ -126,8 +154,9 @@ void PatchBox::leftPressed(int btn) {
     kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kDebug() << k_funcinfo << "notify card " << mLSources[btn];
-        emit routeChanged(mIndex, LEFT, mLSources[btn]);
+        const QString& soundSource = mLSources.key(btn);
+        kDebug() << k_funcinfo << "notify card " << soundSource;
+        emit routeChanged(mIndex, LEFT, soundSource);
     }
     kDebug() << k_funcinfo << "leaving";
 }
@@ -136,22 +165,23 @@ void PatchBox::rightPressed(int btn) {
     kDebug() << k_funcinfo << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
-        kDebug() << k_funcinfo << "notify card " << mRSources[btn];
-        emit routeChanged(mIndex, RIGHT, mRSources[btn]);
+        const QString& soundSource = mRSources.key(btn);
+        kDebug() << k_funcinfo << "notify card " << soundSource;
+        emit routeChanged(mIndex, RIGHT, soundSource);
     }
     kDebug() << k_funcinfo << "leaving";
 }
 
 void PatchBox::leftNotified(int btn) {
     kDebug() << k_funcinfo << "entering";
-    QString searchTerm = mRSources[btn];
+    QString searchTerm = mRSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
     kDebug() << k_funcinfo << "set selection " << searchTerm;
-    leftSelection->setButton(mLSources.findIndex(searchTerm));
+    mLGroup->button(mLSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
     kDebug() << k_funcinfo << "notify card " <<  searchTerm;
@@ -162,14 +192,14 @@ void PatchBox::leftNotified(int btn) {
 
 void PatchBox::rightNotified(int btn) {
     kDebug() << k_funcinfo << "entering";
-    QString searchTerm = mLSources[btn];
+    QString searchTerm = mLSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
     kDebug() << k_funcinfo << "set selection " << searchTerm;
-    rightSelection->setButton(mRSources.findIndex(searchTerm));
+    mRGroup->button(mRSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
     kDebug() << k_funcinfo << "notify card " <<  searchTerm;
@@ -181,11 +211,11 @@ void PatchBox::rightNotified(int btn) {
 void PatchBox::lockToggled(bool locked) {
     kDebug() << k_funcinfo << "entering";
     if (locked) {
-        connect(leftSelection, SIGNAL(pressed(int)), this, SLOT(rightNotified(int)));
-        connect(rightSelection, SIGNAL(pressed(int)), this, SLOT(leftNotified(int)));
+        connect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
+        connect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
     } else {
-        disconnect(leftSelection, SIGNAL(pressed(int)), this, SLOT(rightNotified(int)));
-        disconnect(rightSelection, SIGNAL(pressed(int)), this, SLOT(leftNotified(int)));
+        disconnect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
+        disconnect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
     }
     kDebug() << k_funcinfo << "leaving";
 }

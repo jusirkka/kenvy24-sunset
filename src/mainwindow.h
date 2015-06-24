@@ -24,6 +24,7 @@
 #include <kmainwindow.h>
 #include <QModelIndex>
 
+class QButtonGroup;
 namespace Ui {
 class MainWindow;
 }
@@ -49,14 +50,14 @@ private slots:
     void on_actionDeleteProfile_triggered();
     void on_actionRenameProfile_triggered();
 
-    void on_actionLedsEnabled_toggled(bool);
+    void on_actionEnableLeds_toggled(bool);
 
     void on_actionQuit_triggered();
     void on_actionClose_triggered();
 
-    void on_dbus_PCMVolumeUp();
-    void on_dbus_PCMVolumeDown();
-    void on_dbus_PCMVolumeMute();
+    void dbus_PCMVolumeUp();
+    void dbus_PCMVolumeDown();
+    void dbus_PCMVolumeMute();
 
 
 private:
@@ -68,11 +69,18 @@ private:
     //! Save current state
     void writeSettings();
 
+    void setupHWTab();
+
 
 private:
 
+    typedef QList<int> IndexList;
+    IndexList mLevelIndices;
     Ui::MainWindow *mUI;
     QModelIndex mSelectedIndex;
+
+    QHash<QString, int> mHWInternal;
+    QButtonGroup* mHWInternalG;
 };
 
 
