@@ -61,8 +61,8 @@ public:
     void connectToCard(EnvyCard* envyCard);
     void connectFromCard(EnvyCard* envyCard);
 
-    void saveToConfig(KSharedConfigPtr);
-    void loadFromConfig(KSharedConfigPtr);
+    void saveToConfig(KConfigBase*);
+    void loadFromConfig(KConfigBase*);
 
     void updatePeaks(StereoLevels level);
 

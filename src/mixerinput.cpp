@@ -40,12 +40,10 @@ MixerInput::~MixerInput() {
     delete mUI;
 }
 
-void MixerInput::setup(int index) {
+void MixerInput::setup(int index, const QString& name, const QString& title) {
     mIndex = index;
-}
-
-void MixerInput::setTitle(const QString& title) {
     mUI->inputGroup->setTitle(title);
+    setObjectName(name);
 }
 
 
@@ -102,7 +100,7 @@ void MixerInput::updatePeaks(StereoLevels level) {
     mUI->rightMeter->updatePeak(level.right);
 }
 
-void MixerInput::saveToConfig(KSharedConfigPtr config) {
+void MixerInput::saveToConfig(KConfigBase* config) {
     KConfigGroup volGroup(config, QString("%1-%2").arg(objectName()).arg(mIndex));
     volGroup.writeEntry("locked", mUI->checkLock->isChecked());
 
@@ -116,36 +114,36 @@ void MixerInput::saveToConfig(KSharedConfigPtr config) {
 
 }
 
-void MixerInput::loadFromConfig(KSharedConfigPtr config) {
+void MixerInput::loadFromConfig(KConfigBase* config) {
     kDebug() << k_funcinfo << "entering ";
 
     KConfigGroup volGroup(config, QString("%1-%2").arg(objectName()).arg(mIndex));
 
-    int val = volGroup.readEntry("left-volume").toInt();
+    int val = volGroup.readEntry("left-volume", 80);
     mUI->leftVolume->setValue(val);
     on_leftVolume_valueChanged(val);
 
-    val = volGroup.readEntry("left-stereo").toInt();
+    val = volGroup.readEntry("left-stereo", 0);
     mUI->leftStereo->setValue(val);
     on_leftStereo_valueChanged(val);
 
-    val = volGroup.readEntry("right-volume").toInt();
+    val = volGroup.readEntry("right-volume", 80);
     mUI->rightVolume->setValue(val);
     on_rightVolume_valueChanged(val);
 
-    val = volGroup.readEntry("right-stereo").toInt();
+    val = volGroup.readEntry("right-stereo", 0);
     mUI->rightStereo->setValue(val);
     on_rightStereo_valueChanged(val);
 
 
-    bool muted = volGroup.readEntry("left-mute").toInt();
+    bool muted = volGroup.readEntry("left-mute", false);
     mUI->checkMuteLeft->setChecked(muted);
 
-    muted = volGroup.readEntry("right-mute").toInt();
+    muted = volGroup.readEntry("right-mute", false);
     mUI->checkMuteRight->setChecked(muted);
 
 
-    bool locked = volGroup.readEntry("locked").toInt();
+    bool locked = volGroup.readEntry("locked", true);
 
     if (locked) {
         mVDelta = mUI->leftVolume->value() - mUI->rightVolume->value();

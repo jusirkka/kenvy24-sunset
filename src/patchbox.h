@@ -63,13 +63,12 @@ public:
     PatchBox(QWidget* parent);
     ~PatchBox();
 
-    void setTitle(const QString&);
-    void setup(int index);
+    void setup(int index, const QString& name, const QString& title);
     void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
     void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
         
-    void saveToConfig(KSharedConfigPtr);
-    void loadFromConfig(KSharedConfigPtr);
+    void saveToConfig(KConfigBase*);
+    void loadFromConfig(KConfigBase*);
 
 public slots:
 

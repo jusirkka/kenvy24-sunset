@@ -53,27 +53,27 @@ void MasterVolume::updatePeaks(StereoLevels level) {
 
 
 
-void MasterVolume::saveToConfig(KSharedConfigPtr config) {
+void MasterVolume::saveToConfig(KConfigBase* config) {
     KConfigGroup volGroup(config, objectName());
     volGroup.writeEntry("locked", mUI->checkLock->isChecked());
     volGroup.writeEntry("left-volume", mUI->leftSlider->value());
     volGroup.writeEntry("right-volume", mUI->rightSlider->value());
 }
 
-void MasterVolume::loadFromConfig(KSharedConfigPtr config) {
+void MasterVolume::loadFromConfig(KConfigBase* config) {
     kDebug() << k_funcinfo << "entering ";
     KConfigGroup volGroup(config, objectName());
 
-    int val = volGroup.readEntry("left-volume").toInt();
+    int val = volGroup.readEntry("left-volume", 100);
     mUI->leftSlider->setValue(val);
     on_leftSlider_valueChanged(val);
 
-    val = volGroup.readEntry("right-volume").toInt();
+    val = volGroup.readEntry("right-volume", 100);
     mUI->rightSlider->setValue(val);
     on_rightSlider_valueChanged(val);
 
 
-    bool locked = volGroup.readEntry("locked").toInt();
+    bool locked = volGroup.readEntry("locked", true);
     if (locked) {
         mLRDiff = mUI->leftSlider->value() - mUI->rightSlider->value();
     } else {

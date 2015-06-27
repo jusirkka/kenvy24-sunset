@@ -59,13 +59,12 @@ public:
     MixerInput(QWidget* parent);
     ~MixerInput();
 
-    void setup(int index);
-    void setTitle(const QString&);
+    void setup(int index, const QString& name, const QString& title);
     void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
     void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
         
-    void saveToConfig(KSharedConfigPtr);
-    void loadFromConfig(KSharedConfigPtr);
+    void saveToConfig(KConfigBase*);
+    void loadFromConfig(KConfigBase*);
 
     void updatePeaks(StereoLevels level);
 

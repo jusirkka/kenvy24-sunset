@@ -656,7 +656,7 @@
    <widget class="QWidget" name="profileDockContents">
     <layout class="QVBoxLayout" name="modelDocklayout">
      <item>
-      <widget class="QListView" name="profiles">
+      <widget class="QListWidget" name="profiles">
        <property name="contextMenuPolicy">
         <enum>Qt::ActionsContextMenu</enum>
        </property>
@@ -664,6 +664,9 @@
         <set>QAbstractItemView::NoEditTriggers</set>
        </property>
        <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="sortingEnabled">
         <bool>true</bool>
        </property>
       </widget>

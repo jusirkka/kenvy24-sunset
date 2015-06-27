@@ -70,10 +70,6 @@ PatchBox::PatchBox(QWidget* parent):
 }
 
 
-void PatchBox::setTitle(const QString& title) {
-    mUI->patchGroup->setTitle(title);
-}
-
 PatchBox::~PatchBox() {
     delete mLGroup;
     delete mRGroup;
@@ -81,8 +77,10 @@ PatchBox::~PatchBox() {
 }
 
 
-void PatchBox::setup(int index) {
+void PatchBox::setup(int index, const QString& name, const QString& title) {
     mIndex = index;
+    mUI->patchGroup->setTitle(title);
+    setObjectName(name);
 }
 
 void PatchBox::connectToCard(EnvyCard* envyCard, const QString& outputType) {
@@ -107,27 +105,27 @@ void PatchBox::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
                          SLOT(updateRoute(int, LeftRight, const QString&)));
 }
         
-void PatchBox::saveToConfig(KSharedConfigPtr config) {
-    KConfigGroup volGroup(config, objectName());
-    volGroup.writeEntry("locked", mUI->checkLock->isChecked());
-    volGroup.writeEntry(QString("left-route-%1").arg(mIndex), mLGroup->checkedId());
-    volGroup.writeEntry(QString("right-route-%1").arg(mIndex), mRGroup->checkedId());
+void PatchBox::saveToConfig(KConfigBase* config) {
+    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mIndex));
+    routing.writeEntry("locked", mUI->checkLock->isChecked());
+    routing.writeEntry(QString("left-route"), mLGroup->checkedId());
+    routing.writeEntry(QString("right-route"), mRGroup->checkedId());
 }
 
-void PatchBox::loadFromConfig(KSharedConfigPtr config) {
+void PatchBox::loadFromConfig(KConfigBase* config) {
     kDebug() << k_funcinfo << "entering";
 
-    KConfigGroup volGroup(config, objectName());
+    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mIndex));
 
-    int id = volGroup.readEntry(QString("left-route-%1").arg(mIndex)).toInt();
+    int id = routing.readEntry("left-route", mLSources[R_SRC_MIXER]);
     mLGroup->button(id)->setChecked(true);
     leftPressed(id);
 
-    id = volGroup.readEntry(QString("right-route-%1").arg(mIndex)).toInt();
+    id = routing.readEntry("right-route", mRSources[R_SRC_MIXER]);
     mRGroup->button(id)->setChecked(true);
     rightPressed(id);
 
-    bool locked = volGroup.readEntry("locked").toInt();
+    bool locked = routing.readEntry("locked", true);
     mUI->checkLock->setChecked(locked);
 
     kDebug() << k_funcinfo << "leaving";

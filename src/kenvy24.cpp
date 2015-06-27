@@ -35,7 +35,6 @@ KEnvy24App::~KEnvy24App() {
 
 int KEnvy24App::newInstance() {
     if (mEnvy) return KUniqueApplication::newInstance();
-
     mEnvy = new MainWindow;
     mDBus = new DBusIface(this);
 
@@ -46,7 +45,7 @@ int KEnvy24App::newInstance() {
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);
     }
-    mEnvy->show();
+    // mEnvy->show();
     return 0;
 }
 

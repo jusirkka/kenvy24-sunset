@@ -23,8 +23,13 @@
 
 #include <kmainwindow.h>
 #include <QModelIndex>
+#include <ksharedconfig.h>
 
 class QButtonGroup;
+class QCheckBox;
+class QListWidgetItem;
+
+class KStatusNotifierItem;
 namespace Ui {
 class MainWindow;
 }
@@ -34,14 +39,27 @@ class MainWindow: public KMainWindow {
 
     Q_OBJECT
 
+
+
 public:
 
     MainWindow();
     virtual ~MainWindow();
 
-protected:
+public slots:
 
-    virtual void closeEvent(QCloseEvent *event);
+    void updateBoolConfig(const QString&, bool);
+    void updateEnumConfig(const QString&, const QString&);
+
+    void internalClockRateChanged(int);
+    void digitalClockRateChanged(int);
+    void deemphasisChanged(int);
+    void masterClockChanged(int);
+
+    void dbus_PCMVolumeUp();
+    void dbus_PCMVolumeDown();
+    void dbus_PCMVolumeMute();
+
 
 private slots:
 
@@ -55,32 +73,61 @@ private slots:
     void on_actionQuit_triggered();
     void on_actionClose_triggered();
 
-    void dbus_PCMVolumeUp();
-    void dbus_PCMVolumeDown();
-    void dbus_PCMVolumeMute();
+    void on_checkLock_toggled(bool);
+    void on_checkReset_toggled(bool);
 
+    void on_profiles_currentItemChanged(QListWidgetItem* curr, QListWidgetItem* prev);
 
 private:
 
+    virtual bool queryClose();
 
-    //! Read saved state
-    void readSettings();
+    void readState();
+    void readProfiles();
+    void loadProfile();
 
-    //! Save current state
-    void writeSettings();
+    void writeState();
+    void writeProfile();
+
+    void createDefaultProfile();
 
     void setupHWTab();
+    void loadHWFromConfig(KConfigBase*);
+    void saveHWToConfig(KConfigBase*);
 
+    QString uniqueName(const QString&);
+
+signals:
+
+    void enumConfigChanged(const QString&, const QString&);
+    void boolConfigChanged(const QString&, bool);
 
 private:
+
+    bool inSlotFlag;
+    bool inEventFlag;
+
+    struct ExclusiveFlag {
+        bool& slotFlag;
+        ExclusiveFlag(bool& flag) : slotFlag(flag) {
+            flag = true;
+        }
+        ~ExclusiveFlag() {
+            slotFlag = false;
+        }
+    };
 
     typedef QList<int> IndexList;
     IndexList mLevelIndices;
     Ui::MainWindow *mUI;
     QModelIndex mSelectedIndex;
 
-    QHash<QString, int> mHWInternal;
-    QButtonGroup* mHWInternalG;
+    QHash<QString, QStringList> mHWStrings;
+    QHash<QString, QButtonGroup*> mHWGroups;
+    QHash<QString, QCheckBox*> mHWFlags;
+    KStatusNotifierItem* mTray;
+    bool m_startDocked;
+    bool m_shuttingDown;
 };
 
 

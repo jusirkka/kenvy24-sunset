@@ -40,8 +40,8 @@ int main(int argc, char **argv)
     kDebug() << "starting";
     KCmdLineOptions options;
     KAboutData about(
-        "kenvy24", 0,
-        ki18n("KEnvy24"), VERSION,
+        "kenvy24-sunset", 0,
+        ki18n("KEnvy24Sunset"), VERSION,
         ki18n("The ICE1712 based cards KDE control panel"), KAboutData::License_GPL,
         ki18n("(C) 2015 Jukka Sirkka"),
         ki18n("Feedback:\njukka.sirkka@iki.fi\n\n(Build Date: " __DATE__ ")"),

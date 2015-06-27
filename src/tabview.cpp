@@ -78,36 +78,6 @@ TabView::TabView(QWidget* parent) :
     mConfigCheckers.append(checkLock);
     mConfigCheckers.append(checkReset);
 
-    mConfigEnumVars << mConfigInternalClock << mConfigClockDefault << mConfigDeemphasis;
-    mConfigGroups.append(internalGroup);
-    mConfigGroups.append(digitalGroup);
-    mConfigGroups.append(deemphasisGroup);
-
-    QStringList* enums = new QStringList;
-    *enums << "1" << "2" << "3" << "4" << "5";
-    (*enums)[internalGroup->id(xtal320)] = QString(ENUM_RATE320);
-    (*enums)[internalGroup->id(xtal441)] = QString(ENUM_RATE441);
-    (*enums)[internalGroup->id(xtal480)] = QString(ENUM_RATE480);
-    (*enums)[internalGroup->id(xtal882)] = QString(ENUM_RATE882);
-    (*enums)[internalGroup->id(xtal960)] = QString(ENUM_RATE960);
-    mConfigEnums.append(enums);
-
-    enums = new QStringList;
-    *enums << "1" << "2" << "3" << "4" << "5";
-    (*enums)[digitalGroup->id(iec320)] = QString(ENUM_RATE320);
-    (*enums)[digitalGroup->id(iec441)] = QString(ENUM_RATE441);
-    (*enums)[digitalGroup->id(iec480)] = QString(ENUM_RATE480);
-    (*enums)[digitalGroup->id(iec882)] = QString(ENUM_RATE882);
-    (*enums)[digitalGroup->id(iec960)] = QString(ENUM_RATE960);
-    mConfigEnums.append(enums);
-
-    enums = new QStringList;
-    *enums << "1" << "2" << "3" << "4";
-    (*enums)[deemphasisGroup->id(dOff)] = QString(ENUM_DOFF);
-    (*enums)[deemphasisGroup->id(d320)] = QString(ENUM_D320);
-    (*enums)[deemphasisGroup->id(d441)] = QString(ENUM_D441);
-    (*enums)[deemphasisGroup->id(d480)] = QString(ENUM_D480);
-    mConfigEnums.append(enums);
 
     // special value
     mIdxOfInternalSamples  = masterGroup->id(syncInternal);
@@ -119,31 +89,11 @@ TabView::TabView(QWidget* parent) :
         return;
     }
 
-    setupTabs();
     connectToCard();
     connectFromCard();
     envyCard->pulse();
     loadProfiles();
     setupTimer();
-}
-
-TabView::~TabView() {
-    delete envyCard;
-}
-
-void TabView::setupTabs() {
-
-    mixerAnalogIn->inputGroup->setTitle("Analog In");
-    mixerAnalogIn->setup(0);
-    mixerDigitalIn->inputGroup->setTitle("Digital In");
-    mixerDigitalIn->setup(0);
-    mixerPCM1->inputGroup->setTitle("PCM Playback");
-    mixerPCM1->setup(0);
-
-    analogOut->patchGroup->setTitle("Analog Out");
-    analogOut->setup(0);
-    digitalOut->patchGroup->setTitle("Digital Out");
-    digitalOut->setup(0);
 }
 
 

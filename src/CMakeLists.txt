@@ -5,12 +5,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${KD
 SET(kenvy24gui_SRCS
     mainwindow.cpp
     kenvy24.cpp
-    dockwidget.cpp
     envycard.cpp
     mastervolume.cpp
     mixerinput.cpp
     peakmeter.cpp
     patchbox.cpp
+    renamedialog.cpp
     dbusiface.cpp
 )
 
@@ -37,6 +37,7 @@ set(kenvy24gui_UI
     mixerinput.ui
     peakmeter.ui
     patchbox.ui
+    renamedialog.ui
 )
 
 set(CMAKE_AUTOMOC TRUE)
