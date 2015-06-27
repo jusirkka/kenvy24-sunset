@@ -24,15 +24,14 @@
 // Local includes.
 
 #include "dbusiface.h"
-#include "kenvy24adaptor.h"
+#include "kenvy24_sunsetadaptor.h"
 
 DBusIface::DBusIface(QObject *parent)
          : QObject(parent)
 {
-    new Kenvy24Adaptor(this);
+    new Kenvy24_sunsetAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
-    dbus.registerObject("/kenvy24", this);
-    dbus.registerService("org.kvanttiapina.kenvy24");
+    dbus.registerObject("/Mixer", this);
 }
 
 DBusIface::~DBusIface() {}
@@ -50,6 +49,37 @@ void DBusIface::pcmVolumeDown()
 void DBusIface::pcmVolumeMute()
 {
     emit signalPCMVolumeMute();
+}
+
+void DBusIface::analogVolumeUp()
+{
+    emit signalAnalogVolumeUp();
+}
+
+void DBusIface::analogVolumeDown()
+{
+    emit signalAnalogVolumeDown();
+}
+
+void DBusIface::analogVolumeMute()
+{
+    emit signalAnalogVolumeMute();
+}
+
+
+void DBusIface::digitalVolumeUp()
+{
+    emit signalDigitalVolumeUp();
+}
+
+void DBusIface::digitalVolumeDown()
+{
+    emit signalDigitalVolumeDown();
+}
+
+void DBusIface::digitalVolumeMute()
+{
+    emit signalDigitalVolumeMute();
 }
 
 

@@ -22,14 +22,15 @@
 #define kenvy_mainwindow_h
 
 #include <kmainwindow.h>
-#include <QModelIndex>
 #include <ksharedconfig.h>
 
 class QButtonGroup;
 class QCheckBox;
 class QListWidgetItem;
-
+class DBusIface;
+class QTimer;
 class KStatusNotifierItem;
+
 namespace Ui {
 class MainWindow;
 }
@@ -43,7 +44,7 @@ class MainWindow: public KMainWindow {
 
 public:
 
-    MainWindow();
+    MainWindow(DBusIface*);
     virtual ~MainWindow();
 
 public slots:
@@ -55,10 +56,6 @@ public slots:
     void digitalClockRateChanged(int);
     void deemphasisChanged(int);
     void masterClockChanged(int);
-
-    void dbus_PCMVolumeUp();
-    void dbus_PCMVolumeDown();
-    void dbus_PCMVolumeMute();
 
 
 private slots:
@@ -77,6 +74,8 @@ private slots:
     void on_checkReset_toggled(bool);
 
     void on_profiles_currentItemChanged(QListWidgetItem* curr, QListWidgetItem* prev);
+
+    void updateMeters();
 
 private:
 
@@ -117,10 +116,9 @@ private:
         }
     };
 
-    typedef QList<int> IndexList;
+    typedef QVector<int> IndexList;
     IndexList mLevelIndices;
     Ui::MainWindow *mUI;
-    QModelIndex mSelectedIndex;
 
     QHash<QString, QStringList> mHWStrings;
     QHash<QString, QButtonGroup*> mHWGroups;
@@ -128,6 +126,8 @@ private:
     KStatusNotifierItem* mTray;
     bool m_startDocked;
     bool m_shuttingDown;
+    QTimer* mTimer;
+    int mUpdateInterval;
 };
 
 

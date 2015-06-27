@@ -64,11 +64,11 @@ void MasterVolume::loadFromConfig(KConfigBase* config) {
     kDebug() << k_funcinfo << "entering ";
     KConfigGroup volGroup(config, objectName());
 
-    int val = volGroup.readEntry("left-volume", 100);
+    int val = volGroup.readEntry("left-volume", 20);
     mUI->leftSlider->setValue(val);
     on_leftSlider_valueChanged(val);
 
-    val = volGroup.readEntry("right-volume", 100);
+    val = volGroup.readEntry("right-volume", 20);
     mUI->rightSlider->setValue(val);
     on_rightSlider_valueChanged(val);
 

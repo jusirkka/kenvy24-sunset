@@ -30,7 +30,7 @@
 class DBusIface : public QObject
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.kvanttiapina.kenvy24")
+    Q_CLASSINFO("D-Bus Interface", "org.kvanttiapina.kenvy24_sunset")
 
 public:
 
@@ -43,6 +43,12 @@ signals:
     void signalPCMVolumeUp();
     void signalPCMVolumeDown();
     void signalPCMVolumeMute();
+    void signalAnalogVolumeUp();
+    void signalAnalogVolumeDown();
+    void signalAnalogVolumeMute();
+    void signalDigitalVolumeUp();
+    void signalDigitalVolumeDown();
+    void signalDigitalVolumeMute();
 
 
 
@@ -51,6 +57,12 @@ public slots:
     void pcmVolumeUp();
     void pcmVolumeDown();
     void pcmVolumeMute();
+    void analogVolumeUp();
+    void analogVolumeDown();
+    void analogVolumeMute();
+    void digitalVolumeUp();
+    void digitalVolumeDown();
+    void digitalVolumeMute();
 
 };
 

@@ -82,6 +82,11 @@ public slots:
     void on_checkMuteRight_toggled(bool);
     void on_checkLock_toggled(bool);
 
+    void dbus_VolumeUp();
+    void dbus_VolumeDown();
+    void dbus_VolumeMute();
+
+
 signals:
 
     void muted(int index, LeftRight channel, bool m);

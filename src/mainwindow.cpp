@@ -21,6 +21,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "renamedialog.h"
+#include "dbusiface.h"
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <kdebug.h>
@@ -29,6 +30,8 @@
 #include <kglobal.h>
 #include <ksharedconfig.h>
 #include <kconfiggroup.h>
+#include <kactioncollection.h>
+#include <QTimer>
 
 #define L_MASTER 0
 #define L_PCM 1
@@ -51,13 +54,15 @@
 
 #define RC QString("%1rc").arg(kapp->applicationName())
 
-MainWindow::MainWindow():
+MainWindow::MainWindow(DBusIface* dbus):
     KMainWindow(),
     inSlotFlag(false),
     inEventFlag(false),
+    mLevelIndices(4),
     mUI(new Ui::MainWindow),
     m_startDocked(false),
-    m_shuttingDown(false)
+    m_shuttingDown(false),
+    mUpdateInterval(20)
 {
 
 
@@ -78,7 +83,18 @@ MainWindow::MainWindow():
     mUI->analogOut->setup(0, "router-analog-out", "Analog Out");
     mUI->digitalOut->setup(0, "router-digital-out", "Digital Out");
 
-    mLevelIndices << 0 << 1 << 2 << 3;
+    connect(dbus, SIGNAL(signalPCMVolumeDown()), mUI->mixerPCM1, SLOT(dbus_VolumeDown()));
+    connect(dbus, SIGNAL(signalPCMVolumeUp()), mUI->mixerPCM1, SLOT(dbus_VolumeUp()));
+    connect(dbus, SIGNAL(signalPCMVolumeMute()), mUI->mixerPCM1, SLOT(dbus_VolumeMute()));
+
+    connect(dbus, SIGNAL(signalAnalogVolumeDown()), mUI->mixerAnalogIn, SLOT(dbus_VolumeDown()));
+    connect(dbus, SIGNAL(signalAnalogVolumeUp()), mUI->mixerAnalogIn, SLOT(dbus_VolumeUp()));
+    connect(dbus, SIGNAL(signalAnalogVolumeMute()), mUI->mixerAnalogIn, SLOT(dbus_VolumeMute()));
+
+    connect(dbus, SIGNAL(signalDigitalVolumeDown()), mUI->mixerDigitalIn, SLOT(dbus_VolumeDown()));
+    connect(dbus, SIGNAL(signalDigitalVolumeUp()), mUI->mixerDigitalIn, SLOT(dbus_VolumeUp()));
+    connect(dbus, SIGNAL(signalDigitalVolumeMute()), mUI->mixerDigitalIn, SLOT(dbus_VolumeMute()));
+
     mLevelIndices[L_MASTER] = 20;
     mLevelIndices[L_PCM] = 0;
     mLevelIndices[L_ANALOG_IN] = 10;
@@ -86,6 +102,8 @@ MainWindow::MainWindow():
 
     setupHWTab();
 
+    mTimer = new QTimer(this);
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMeters()));
 
     readState();
     readProfiles();
@@ -105,11 +123,18 @@ MainWindow::MainWindow():
     mTray->setIconByName(QLatin1String("folder-sound"));
     mTray->setToolTip(QLatin1String("folder-sound"), i18n("Kenvy24"), i18n("Sound Mixer"));
 
+
+    QAction* file_quit = mTray->actionCollection()->action("file_quit");
+    file_quit->disconnect();
+    connect(file_quit, SIGNAL(triggered()), this, SLOT(on_actionQuit_triggered()));
+
     if (m_startDocked) {
         hide();
     } else {
         show();
     }
+
+    if (mUI->actionEnableLeds->isChecked()) mTimer->start(mUpdateInterval);
 }
 
 void MainWindow::setupHWTab() {
@@ -168,6 +193,17 @@ void MainWindow::setupHWTab() {
     mHWFlags[HW_BOOL_RATE_LOCKING] = mUI->checkLock;
 
 }
+
+
+void MainWindow::updateMeters() {
+//    EnvyCard::PeakList peaks = envyCard->getPeaks(mLevelIndices);
+
+//    mUI->mixerAnalogIn->updatePeaks(peaks[L_ANALOG_IN]);
+//    mUI->mixerDigitalIn->updatePeaks(peaks[L_DIGITAL_IN]);
+//    mUI->mixerPCM1->updatePeaks(peaks[L_PCM]);
+//    mUI->masterVolume->updatePeaks(peaks[L_MASTER]);
+}
+
 
 void MainWindow::internalClockRateChanged(int id) {
     kDebug() << "entering";
@@ -353,7 +389,13 @@ void MainWindow::on_actionRenameProfile_triggered() {
     }
 }
 
-void MainWindow::on_actionEnableLeds_toggled(bool) {}
+void MainWindow::on_actionEnableLeds_toggled(bool on) {
+    if (on) {
+        mTimer->start(mUpdateInterval);
+    } else {
+        mTimer->stop();
+    }
+}
 
 void MainWindow::on_actionQuit_triggered() {
     kDebug() << "entering ";
@@ -385,6 +427,7 @@ void MainWindow::writeState() {
         state.writeEntry("selected-profile", mUI->profiles->currentItem()->text());
     }
     state.writeEntry("geometry", geometry());
+    state.writeEntry("profiles-dock-area", (int) dockWidgetArea(mUI->profileDock));
     kDebug() << "leaving";
 }
 
@@ -437,6 +480,7 @@ void MainWindow::readState() {
     mUI->actionEnableLeds->setChecked(state.readEntry("enable-leds", true));
     QRect default_geom(30, 30, 600, 400);
     setGeometry(state.readEntry("geometry", default_geom));
+    addDockWidget((Qt::DockWidgetArea) state.readEntry("profiles-dock-area", (int) Qt::LeftDockWidgetArea), mUI->profileDock);
     kDebug() << "leaving";
 }
 
@@ -548,10 +592,6 @@ void MainWindow::loadHWFromConfig(KConfigBase* profile) {
 
     kDebug() << "leaving";
 }
-
-void MainWindow::dbus_PCMVolumeUp() {}
-void MainWindow::dbus_PCMVolumeDown() {}
-void MainWindow::dbus_PCMVolumeMute() {}
 
 
 MainWindow::~MainWindow() {

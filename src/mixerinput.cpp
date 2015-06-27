@@ -119,19 +119,19 @@ void MixerInput::loadFromConfig(KConfigBase* config) {
 
     KConfigGroup volGroup(config, QString("%1-%2").arg(objectName()).arg(mIndex));
 
-    int val = volGroup.readEntry("left-volume", 80);
+    int val = volGroup.readEntry("left-volume", 10);
     mUI->leftVolume->setValue(val);
     on_leftVolume_valueChanged(val);
 
-    val = volGroup.readEntry("left-stereo", 0);
+    val = volGroup.readEntry("left-stereo", 96);
     mUI->leftStereo->setValue(val);
     on_leftStereo_valueChanged(val);
 
-    val = volGroup.readEntry("right-volume", 80);
+    val = volGroup.readEntry("right-volume", 10);
     mUI->rightVolume->setValue(val);
     on_rightVolume_valueChanged(val);
 
-    val = volGroup.readEntry("right-stereo", 0);
+    val = volGroup.readEntry("right-stereo", 96);
     mUI->rightStereo->setValue(val);
     on_rightStereo_valueChanged(val);
 
@@ -358,6 +358,52 @@ void MixerInput::on_checkLock_toggled(bool locked) {
         disconnect(this, SIGNAL(notifyRightMute(bool)), mUI->checkMuteRight, SLOT(setChecked(bool)));
     }
     kDebug() << k_funcinfo << "leaving ";
+}
+
+
+void MixerInput::dbus_VolumeUp() {
+    kDebug() << "entering";
+    // negative values
+    int lval = mUI->leftVolume->value();
+    int rval = mUI->rightVolume->value();
+
+    if (lval <= 0 || rval <= 0) {
+        return;
+    }
+
+    mUI->leftVolume->setValue(lval - 1);
+
+    if (!mUI->checkLock->isChecked()) {
+        mUI->rightVolume->setValue(rval - 1);
+    }
+    kDebug() << "leaving";
+}
+
+void MixerInput::dbus_VolumeDown() {
+    kDebug() << "entering";
+    // negative values
+    int lval = mUI->leftVolume->value();
+    int rval = mUI->rightVolume->value();
+
+    if (lval >= 96 || rval >= 96) {
+        return;
+    }
+
+    mUI->leftVolume->setValue(lval + 1);
+
+    if (!mUI->checkLock->isChecked()) {
+        mUI->rightVolume->setValue(rval + 1);
+    }
+    kDebug() << "leaving";
+}
+
+void MixerInput::dbus_VolumeMute() {
+    kDebug() << "entering";
+    mUI->checkMuteLeft->toggle();
+    if (!mUI->checkLock->isChecked()) {
+        mUI->checkMuteRight->toggle();
+    }
+    kDebug() << "leaving";
 }
 
 #include "mixerinput.moc"

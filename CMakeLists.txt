@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_INSTALL_PREFIX /usr)
 
-project(KEnvy24)
+project(KEnvy24Sunset)
 
 find_package(KDE4 REQUIRED)
 include(KDE4Defaults)

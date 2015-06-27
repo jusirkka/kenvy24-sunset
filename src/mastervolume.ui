@@ -70,6 +70,12 @@
               <property name="orientation">
                <enum>Qt::Vertical</enum>
               </property>
+              <property name="invertedAppearance">
+               <bool>true</bool>
+              </property>
+              <property name="invertedControls">
+               <bool>true</bool>
+              </property>
              </widget>
             </item>
             <item>
@@ -159,6 +165,12 @@
               </property>
               <property name="orientation">
                <enum>Qt::Vertical</enum>
+              </property>
+              <property name="invertedAppearance">
+               <bool>true</bool>
+              </property>
+              <property name="invertedControls">
+               <bool>true</bool>
               </property>
              </widget>
             </item>

@@ -31,7 +31,7 @@
 
 
 static const char description[] =
-    I18N_NOOP("VIA Envy24 based sound cards control utility. See http://kenvy24.wiki.sourceforge.net/ for the documentation");
+    I18N_NOOP("VIA Envy24 based sound cards control utility. See xxx for the documentation");
 
 
 
@@ -45,9 +45,8 @@ int main(int argc, char **argv)
         ki18n("The ICE1712 based cards KDE control panel"), KAboutData::License_GPL,
         ki18n("(C) 2015 Jukka Sirkka"),
         ki18n("Feedback:\njukka.sirkka@iki.fi\n\n(Build Date: " __DATE__ ")"),
-        ( "http://kenvy24.wiki.sourceforge.net/" )
+        "http://www.github.com/jusirkka/kenvy24-sunset"
     );
-//    about.addAuthor("Valentin Rusu", 0, "kenvy24@rusu.info");
     KCmdLineArgs::init(argc, argv, &about);
     KCmdLineArgs::addCmdLineOptions(options);
 
