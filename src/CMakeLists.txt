@@ -55,7 +55,7 @@ install(TARGETS kenvy24-sunset DESTINATION bin)
 
 ########### install files ###############
 
-install(FILES kenvy24-sunset.png DESTINATION share/apps/kenvy24/pics)
+install(FILES kenvy24-sunset.png DESTINATION share/apps/kenvy24-sunset/pics)
 install(FILES kenvy24-sunset.desktop DESTINATION share/applications/kde)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 
