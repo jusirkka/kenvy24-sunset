@@ -22,10 +22,8 @@
 #ifndef _ENVYCARD_H_
 #define _ENVYCARD_H_
 
-#include <qobject.h>
+#include <QObject>
 #include <alsa/asoundlib.h>
-#include <string>
-#include <vector>
 #include <QStringList>
 #include <QList>
 #include <QHash>
@@ -39,7 +37,7 @@ class EnvyCard : public QObject {
 public:
 
     typedef QVector<StereoLevels> PeakList;
-    typedef QList<int> IndexList;
+    typedef QVector<int> IndexList;
 
 private:
 
@@ -63,16 +61,16 @@ private:
         unsigned char extra[4];
     } ice1712_eeprom_t;
 
-    static EnvyCard*        instance;
-    snd_ctl_t               *ctl;
-    int                     cardNumber;
-    std::string             cardName;
-    ice1712_eeprom_t        card_eeprom;
-    snd_ctl_elem_value_t    *peaks;
-    bool                    outputActive[ MAX_OUTPUT_CHANNELS ];
-    int                     outChannels;
-    bool                    outputSPDIFActive[ MAX_SPDIF_CHANNELS ];
-    int                     spdifChannels;
+    static EnvyCard* instance;
+    snd_ctl_t *ctl;
+    int cardNumber;
+    QString cardName;
+    ice1712_eeprom_t card_eeprom;
+    snd_ctl_elem_value_t *peaks;
+    bool outputActive[MAX_OUTPUT_CHANNELS];
+    int outChannels;
+    bool outputSPDIFActive[ MAX_SPDIF_CHANNELS ];
+    int spdifChannels;
     QList<QSocketNotifier*> eventNotifiers;
     PeakList mPeaks;
     QStringList mRoutes;
@@ -106,9 +104,10 @@ public:
     static EnvyCard* getInstance();
 
     bool foundEnvyCard() const {
-        return cardName.length() >0;
+        return !cardName.isEmpty();
     }
-    const std::string& getCardName() const {
+
+    const QString& getCardName() const {
         return cardName;
     }
 

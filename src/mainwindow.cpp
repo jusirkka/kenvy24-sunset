@@ -22,6 +22,8 @@
 #include "ui_mainwindow.h"
 #include "renamedialog.h"
 #include "dbusiface.h"
+#include "envycard.h"
+
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <kdebug.h>
@@ -32,6 +34,7 @@
 #include <kconfiggroup.h>
 #include <kactioncollection.h>
 #include <QTimer>
+#include <kmessagebox.h>
 
 #define L_MASTER 0
 #define L_PCM 1
@@ -62,7 +65,8 @@ MainWindow::MainWindow(DBusIface* dbus):
     mUI(new Ui::MainWindow),
     m_startDocked(false),
     m_shuttingDown(false),
-    mUpdateInterval(20)
+    mUpdateInterval(20),
+    mCard(new EnvyCard)
 {
 
 
@@ -107,6 +111,15 @@ MainWindow::MainWindow(DBusIface* dbus):
 
     readState();
     readProfiles();
+
+    if (!mCard->foundEnvyCard()) {
+        KMessageBox::error(this, "Cannot find an Envy24 chip based sound card in your system. Will now quit!");
+        QTimer::singleShot(10, this, SLOT(on_actionQuit_triggered()));
+        return;
+    }
+
+    connectToCard();
+    connectFromCard();
 
     if (!mUI->profiles->currentItem()) {
         // if no profiles, create a default
@@ -194,14 +207,59 @@ void MainWindow::setupHWTab() {
 
 }
 
+void MainWindow::connectFromCard() {
+    kDebug() << "entering";
+
+    QString capture("capture");
+    QString spdif("spdif");
+
+    mUI->mixerAnalogIn->connectFromCard(mCard, capture);
+    mUI->mixerDigitalIn->connectFromCard(mCard, spdif);
+    mUI->mixerPCM1->connectFromCard(mCard);
+    mUI->masterVolume->connectFromCard(mCard);
+
+    QString digital("digital");
+
+    mUI->analogOut->connectFromCard(mCard);
+    mUI->digitalOut->connectFromCard(mCard, digital);
+
+    // Hardware settings tab
+    connect(mCard, SIGNAL(boolConfigUpdated(const QString&, bool)), SLOT(updateBoolConfig(const QString&, bool)));
+    connect(mCard, SIGNAL(enumConfigUpdated(const QString&, const QString&)), SLOT(updateEnumConfig(const QString&, const QString&)));
+
+    kDebug() << "leaving";
+}
+
+void MainWindow::connectToCard() {
+    kDebug() << "entering";
+    QString capture("capture");
+    QString spdif("spdif");
+
+    mUI->mixerAnalogIn->connectToCard(mCard, capture);
+    mUI->mixerDigitalIn->connectToCard(mCard, spdif);
+    mUI->mixerPCM1->connectToCard(mCard);
+    mUI->masterVolume->connectToCard(mCard);
+
+    QString digital("digital");
+
+    mUI->analogOut->connectToCard(mCard);
+    mUI->digitalOut->connectToCard(mCard, digital);
+
+    // Hardware settings tab
+    connect(this, SIGNAL(boolConfigChanged(const QString&, bool)), mCard, SLOT(setBoolConfig(const QString&, bool)));
+    connect(this, SIGNAL(enumConfigChanged(const QString&, const QString&)), mCard, SLOT(setEnumConfig(const QString&, const QString&)));
+
+    kDebug() << "leaving";
+}
+
 
 void MainWindow::updateMeters() {
-//    EnvyCard::PeakList peaks = envyCard->getPeaks(mLevelIndices);
+    EnvyCard::PeakList peaks = mCard->getPeaks(mLevelIndices);
 
-//    mUI->mixerAnalogIn->updatePeaks(peaks[L_ANALOG_IN]);
-//    mUI->mixerDigitalIn->updatePeaks(peaks[L_DIGITAL_IN]);
-//    mUI->mixerPCM1->updatePeaks(peaks[L_PCM]);
-//    mUI->masterVolume->updatePeaks(peaks[L_MASTER]);
+    mUI->mixerAnalogIn->updatePeaks(peaks[L_ANALOG_IN]);
+    mUI->mixerDigitalIn->updatePeaks(peaks[L_DIGITAL_IN]);
+    mUI->mixerPCM1->updatePeaks(peaks[L_PCM]);
+    mUI->masterVolume->updatePeaks(peaks[L_MASTER]);
 }
 
 
@@ -455,18 +513,20 @@ void MainWindow::writeProfile() {
 }
 
 void MainWindow::createDefaultProfile() {
-    // envycard->pulse();
-//        KConfig base(RC);
-//        KConfigGroup profiles(&base, "Profiles");
-//        KConfigGroup current(&profiles, "default");
-//        mUI->mixerPCM1->saveToConfig(&current);
-//        mUI->mixerAnalogIn->saveToConfig(&current);
-//        mUI->mixerDigitalIn->saveToConfig(&current);
-//        mUI->masterVolume->saveToConfig(&current);
-//        mUI->analogOut->saveToConfig(&current);
-//        mUI->digitalOut->saveToConfig(&current);
+    kDebug() << "entering";
+    mCard->pulse();
+    KConfig base(RC);
+    KConfigGroup profiles(&base, "Profiles");
+    KConfigGroup current(&profiles, "default");
+    mUI->mixerPCM1->saveToConfig(&current);
+    mUI->mixerAnalogIn->saveToConfig(&current);
+    mUI->mixerDigitalIn->saveToConfig(&current);
+    mUI->masterVolume->saveToConfig(&current);
+    mUI->analogOut->saveToConfig(&current);
+    mUI->digitalOut->saveToConfig(&current);
     QListWidgetItem* def = new QListWidgetItem("default", mUI->profiles);
     mUI->profiles->setCurrentItem(def);
+    kDebug() << "leaving";
 }
 
 void MainWindow::readState() {

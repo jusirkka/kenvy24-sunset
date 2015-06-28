@@ -1,8 +1,0 @@
-<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
-<kpartgui name="KEnvy24" version="1">
-    <MenuBar>
-        <Menu name="settings"><text>&amp;Settings</text>
-            <Action name="enable_levels"/>
-        </Menu>
-    </MenuBar>
-</kpartgui>

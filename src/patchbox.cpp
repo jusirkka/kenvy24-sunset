@@ -113,7 +113,7 @@ void PatchBox::saveToConfig(KConfigBase* config) {
 }
 
 void PatchBox::loadFromConfig(KConfigBase* config) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
 
     KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mIndex));
 
@@ -128,86 +128,86 @@ void PatchBox::loadFromConfig(KConfigBase* config) {
     bool locked = routing.readEntry("locked", true);
     mUI->checkLock->setChecked(locked);
 
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::updateRoute(int index, LeftRight channel, const QString& soundSource) {
     if (index != mIndex) return;
 
-    kDebug() << k_funcinfo << "entering ";
+    kDebug()  << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         if (channel == LEFT) {
-            kDebug() << k_funcinfo << "set left " << soundSource;
+            kDebug()  << "set left " << soundSource;
             mLGroup->button(mLSources[soundSource])->setChecked(true);
         } else {
-            kDebug() << k_funcinfo << "set right " << soundSource;
+            kDebug()  << "set right " << soundSource;
             mRGroup->button(mRSources[soundSource])->setChecked(true);
         }
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::leftPressed(int btn) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         const QString& soundSource = mLSources.key(btn);
-        kDebug() << k_funcinfo << "notify card " << soundSource;
+        kDebug()  << "notify card " << soundSource;
         emit routeChanged(mIndex, LEFT, soundSource);
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::rightPressed(int btn) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         const QString& soundSource = mRSources.key(btn);
-        kDebug() << k_funcinfo << "notify card " << soundSource;
+        kDebug()  << "notify card " << soundSource;
         emit routeChanged(mIndex, RIGHT, soundSource);
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::leftNotified(int btn) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     QString searchTerm = mRSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kDebug() << k_funcinfo << "set selection " << searchTerm;
+    kDebug()  << "set selection " << searchTerm;
     mLGroup->button(mLSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "notify card " <<  searchTerm;
+    kDebug()  << "notify card " <<  searchTerm;
     emit routeChanged(mIndex, LEFT, searchTerm);
 
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::rightNotified(int btn) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     QString searchTerm = mLSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kDebug() << k_funcinfo << "set selection " << searchTerm;
+    kDebug()  << "set selection " << searchTerm;
     mRGroup->button(mRSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug() << k_funcinfo << "notify card " <<  searchTerm;
+    kDebug()  << "notify card " <<  searchTerm;
     emit routeChanged(mIndex, RIGHT, searchTerm);
 
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void PatchBox::lockToggled(bool locked) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     if (locked) {
         connect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
         connect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
@@ -215,7 +215,7 @@ void PatchBox::lockToggled(bool locked) {
         disconnect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
         disconnect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 

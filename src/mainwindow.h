@@ -30,6 +30,7 @@ class QListWidgetItem;
 class DBusIface;
 class QTimer;
 class KStatusNotifierItem;
+class EnvyCard;
 
 namespace Ui {
 class MainWindow;
@@ -94,6 +95,9 @@ private:
     void loadHWFromConfig(KConfigBase*);
     void saveHWToConfig(KConfigBase*);
 
+    void connectToCard();
+    void connectFromCard();
+
     QString uniqueName(const QString&);
 
 signals:
@@ -128,6 +132,7 @@ private:
     bool m_shuttingDown;
     QTimer* mTimer;
     int mUpdateInterval;
+    EnvyCard* mCard;
 };
 
 

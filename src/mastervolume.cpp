@@ -61,7 +61,7 @@ void MasterVolume::saveToConfig(KConfigBase* config) {
 }
 
 void MasterVolume::loadFromConfig(KConfigBase* config) {
-    kDebug() << k_funcinfo << "entering ";
+    kDebug()  << "entering ";
     KConfigGroup volGroup(config, objectName());
 
     int val = volGroup.readEntry("left-volume", 20);
@@ -81,28 +81,28 @@ void MasterVolume::loadFromConfig(KConfigBase* config) {
     }
     mUI->checkLock->setChecked(locked);
 
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 
 void MasterVolume::analogUpdateDACVolume(LeftRight channel, int value) {
-    kDebug() << k_funcinfo << "entering ";
+    kDebug()  << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         int dispVal = 127 - value;
         if (channel == LEFT) {
-            kDebug() << k_funcinfo << "set left";
+            kDebug()  << "set left";
             mUI->leftSlider->setValue(dispVal);
         } else {
-            kDebug() << k_funcinfo << "set right";
+            kDebug()  << "set right";
             mUI->rightSlider->setValue(dispVal);
         }
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void MasterVolume::on_leftSlider_valueChanged(int left) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     int right = left - mLRDiff;
     if (right < 0) {
         mUI->leftSlider->setValue(mLRDiff);
@@ -117,16 +117,16 @@ void MasterVolume::on_leftSlider_valueChanged(int left) {
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         int value = 127 - left;
-        kDebug() << k_funcinfo << "notify card";
+        kDebug()  << "notify card";
         emit adjusted(LEFT, value);
-        kDebug() << k_funcinfo << "notify right";
+        kDebug()  << "notify right";
         emit notifyRightVolume(right);
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void MasterVolume::on_rightSlider_valueChanged(int right) {
-    kDebug() << k_funcinfo << "entering";
+    kDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
 
     int left = right + mLRDiff;
@@ -142,16 +142,16 @@ void MasterVolume::on_rightSlider_valueChanged(int right) {
 
     if (!inSlotFlag) {
         int value  = 127 - right;
-        kDebug() << k_funcinfo << "notify card";
+        kDebug()  << "notify card";
         emit adjusted(RIGHT, value);
-        kDebug() << k_funcinfo << "notify left";
+        kDebug()  << "notify left";
         emit notifyLeftVolume(left);
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 void MasterVolume::on_checkLock_toggled(bool locked) {
-    kDebug() << k_funcinfo << "entering ";
+    kDebug()  << "entering ";
     if (locked) {
         mLRDiff = mUI->leftSlider->value() - mUI->rightSlider->value();
         connect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftSlider, SLOT(setValue(int)));
@@ -161,7 +161,7 @@ void MasterVolume::on_checkLock_toggled(bool locked) {
         disconnect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftSlider, SLOT(setValue(int)));
         disconnect(this, SIGNAL(notifyRightVolume(int)), mUI->rightSlider, SLOT(setValue(int)));
     }
-    kDebug() << k_funcinfo << "leaving";
+    kDebug()  << "leaving";
 }
 
 #include "mastervolume.moc"

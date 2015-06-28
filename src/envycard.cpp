@@ -76,6 +76,7 @@ EnvyCard::SndCtlElemValue::~SndCtlElemValue() {
                                            
 
 EnvyCard::EnvyCard() : QObject(),
+    cardName(),
     mPeaks(22)
 {
     assert(instance == 0);
@@ -129,7 +130,7 @@ void EnvyCard::initPatchbay() {
         snd_ctl_elem_info_set_item(info, i);
         snd_ctl_elem_info(ctl, info);
         mRoutes << QString(snd_ctl_elem_info_get_item_name(info));
-        kDebug() << k_funcinfo << i << ": " << mRoutes[i];
+        kDebug() << i << ": " << mRoutes[i];
     }
 }
 
@@ -153,7 +154,7 @@ void EnvyCard::initConfig() {
             snd_ctl_elem_info_set_item(info, i);
             snd_ctl_elem_info(ctl, info);
             enums << QString(snd_ctl_elem_info_get_item_name(info));
-            kDebug() << k_funcinfo << i << ": " << (enums)[i];
+            kDebug() << i << ": " << (enums)[i];
         }
         mConfigEnums[key] = enums;
     }
@@ -166,7 +167,7 @@ void EnvyCard::initEvents() {
         struct pollfd* pfds = (pollfd*)alloca(sizeof(*pfds) * npfds);
         npfds = snd_ctl_poll_descriptors(ctl, pfds, npfds);
         for (int i = 0; i < npfds; i++) {
-            kDebug() << k_funcinfo << "creating event notifier for fd = " << pfds[i].fd;
+            kDebug() << "creating event notifier for fd = " << pfds[i].fd;
             QSocketNotifier* eventNotifier = new QSocketNotifier(pfds[i].fd, QSocketNotifier::Read);
             connect(eventNotifier, SIGNAL(activated(int)), SLOT(driverEvent(int)));
             eventNotifiers.push_back(eventNotifier);
@@ -204,7 +205,7 @@ const EnvyCard::PeakList& EnvyCard::getPeaks(const IndexList& indices) {
     int err;
     err = snd_ctl_elem_read(ctl, peaks);
     if (err < 0) {
-        kWarning() << k_funcinfo << "peak update failed" << snd_strerror(err);
+        kWarning() << "peak update failed" << snd_strerror(err);
     }
 
     for (int index = 0; index < indices.size(); index++) {
@@ -219,6 +220,8 @@ const EnvyCard::PeakList& EnvyCard::getPeaks(const IndexList& indices) {
 
 
 void EnvyCard::pulse() {
+
+    kDebug() << "entering";
 
     mixerUpdatePlaybackVolume(0);
     mixerUpdatePlaybackVolume(1);
@@ -249,6 +252,8 @@ void EnvyCard::pulse() {
     enumConfigUpdate(HW_ENUM_DEEMPHASIS);
     boolConfigUpdate(HW_BOOL_RATE_LOCKING);
     boolConfigUpdate(HW_BOOL_RATE_RESET);
+
+    kDebug() << "leaving";
 }
 
 
@@ -264,13 +269,13 @@ void EnvyCard::driverEvent(int) {
     const char* name = snd_ctl_event_elem_get_name(ev);
     int index = snd_ctl_event_elem_get_index(ev);
 
-    kDebug() << k_funcinfo << "driverEvent: " << name << "(" << index << ")";
+    kDebug() << "driverEvent: " << name << "(" << index << ")";
 
     unsigned int mask = snd_ctl_event_elem_get_mask(ev);
     if (! (mask & (SND_CTL_EVENT_MASK_VALUE | SND_CTL_EVENT_MASK_INFO)))
         return;
     
-    kDebug() << k_funcinfo << "driverEvent: " << name << "(" << index << ")";
+    kDebug() << "driverEvent: " << name << "(" << index << ")";
 
     switch (snd_ctl_event_elem_get_interface(ev)) {
         case SND_CTL_ELEM_IFACE_MIXER:
@@ -316,6 +321,7 @@ void EnvyCard::driverEvent(int) {
 }
 
 void EnvyCard::mixerUpdatePlaybackVolume(int index){
+    kDebug() << "entering";
     SndCtlElemValue vols(SND_CTL_ELEM_IFACE_MIXER, getSectionName(SECTION_PLAYBACK));
     snd_ctl_elem_value_set_index(&vols, index);
     readSndCtl(vols);
@@ -323,6 +329,7 @@ void EnvyCard::mixerUpdatePlaybackVolume(int index){
     int right = snd_ctl_elem_value_get_integer(&vols, 1);
     MixerAdjustement adj = deduceMixerAdjustement((LeftRight)(index%2), left, right);
     emit mixerUpdatePlaybackVolume(index/2, (LeftRight)(index%2), adj);
+    kDebug() << "leaving";
 }
 
 void EnvyCard::mixerUpdateInputVolume(int index){
@@ -361,7 +368,7 @@ void EnvyCard::mixerUpdatePlaybackSwitch(int index){
         bool left = snd_ctl_elem_value_get_boolean(&sw, 0);
         bool right = snd_ctl_elem_value_get_boolean(&sw, 1);
         if (left != right)
-            kWarning() << k_funcinfo  << "Mute switches for channel " << index
+            kWarning() << "Mute switches for channel " << index
                      << " do not match. Displaying state of left channel only";
         emit mixerUpdatePCMMuteSwitch(index /2, (LeftRight)(index %2), !left);
     }
@@ -374,7 +381,7 @@ void EnvyCard::mixerUpdateInputSwitch(int index) {
         bool leftOn = snd_ctl_elem_value_get_boolean(&sw, 0);
         bool rightOn = snd_ctl_elem_value_get_boolean(&sw, 1);
         if (leftOn != rightOn)
-            kWarning() << k_funcinfo  << "Mute switches for channel " << index
+            kWarning() << "Mute switches for channel " << index
                      << " do not match. Displaying state of left channel only";
         emit mixerUpdateAnalogInMuteSwitch(index /2, (LeftRight)(index %2), !leftOn);
     }
@@ -387,7 +394,7 @@ void EnvyCard::mixerUpdateSPDIFSwitch(int index){
         bool left = snd_ctl_elem_value_get_boolean(&sw, 0);
         bool right = snd_ctl_elem_value_get_boolean(&sw, 1);
         if (left != right)
-            kWarning() << k_funcinfo  << "Mute switches for channel " << index
+            kWarning() << "Mute switches for channel " << index
                      << " do not match. Displaying state of left channel only";
         emit mixerUpdateSPDIFInMuteSwitch(index / 2, (LeftRight)(index % 2), !left);
     }
@@ -400,12 +407,12 @@ void EnvyCard::patchbayAnalogUpdate(int index) {
     snd_ctl_elem_value_set_index(&val, index);
     int err = snd_ctl_elem_read(ctl, &val);
     if (err < 0) {
-        kWarning() << k_funcinfo << "cannot update analog route: " << snd_strerror(err);
+        kWarning() << "cannot update analog route: " << snd_strerror(err);
         return;
     }
 
     int routeIdx = snd_ctl_elem_value_get_enumerated(&val, 0);
-    kDebug() << k_funcinfo << "new route: " << mRoutes[routeIdx];
+    kDebug() << "new route: " << mRoutes[routeIdx];
     emit analogRouteUpdated(index / 2, (LeftRight)(index % 2), mRoutes[routeIdx]);
 }
 
@@ -414,12 +421,12 @@ void EnvyCard::patchbayDigitalUpdate(int index) {
     snd_ctl_elem_value_set_index(&val, index);
     int err = snd_ctl_elem_read(ctl, &val);
     if (err < 0) {
-        kWarning() << k_funcinfo << "cannot update digital route: " << snd_strerror(err);
+        kWarning() << "cannot update digital route: " << snd_strerror(err);
         return;
     }
 
     int routeIdx = snd_ctl_elem_value_get_enumerated(&val, 0);
-    kDebug() << k_funcinfo << "new route: " << mRoutes[routeIdx];
+    kDebug() << "new route: " << mRoutes[routeIdx];
     emit digitalRouteUpdated(index / 2, (LeftRight)(index % 2), mRoutes[routeIdx]);
 }
 
@@ -428,14 +435,14 @@ void EnvyCard::enumConfigUpdate(const char* var) {
     snd_ctl_elem_value_set_index(&cfg, 0);
     int err = snd_ctl_elem_read(ctl, &cfg);
     if (err < 0) {
-        kWarning() << k_funcinfo << "cannot configure " << var << " :" << snd_strerror(err);
+        kWarning() << "cannot configure " << var << " :" << snd_strerror(err);
         return;
     }
 
     int idx = snd_ctl_elem_value_get_enumerated(&cfg, 0);
     QString key(var);
     const QStringList& enums = mConfigEnums[key];
-    kDebug() << k_funcinfo << key << " = " << enums[idx];
+    kDebug() << key << " = " << enums[idx];
     emit enumConfigUpdated(key, enums[idx]);
 }
 
@@ -444,13 +451,13 @@ void EnvyCard::boolConfigUpdate(const char* var) {
     snd_ctl_elem_value_set_index(&cfg, 0);
     int err = snd_ctl_elem_read(ctl, &cfg);
     if (err < 0) {
-        kWarning() << k_funcinfo << "cannot configure " << var << " :" << snd_strerror(err);
+        kWarning() << "cannot configure " << var << " :" << snd_strerror(err);
         return;
     }
 
     bool bvalue = snd_ctl_elem_value_get_boolean(&cfg, 0);
     QString qvar(var);
-    kDebug() << k_funcinfo << qvar << " = " << bvalue;
+    kDebug() << qvar << " = " << bvalue;
     emit boolConfigUpdated(qvar, bvalue);
 }
 
@@ -485,9 +492,10 @@ void EnvyCard::writeSndCtl(const SndCtlElemValue& val) {
 }
 
 void EnvyCard::readSndCtl(const SndCtlElemValue& val) {
+    kDebug() << "entering";
     int err = snd_ctl_elem_read(ctl, &val);
-    if (err <0) 
-        qWarning("Unable to read value: %s", snd_strerror(err));
+    if (err < 0) kWarning() << "Unable to read value: " << snd_strerror(err);
+    kDebug() << "leaving";
 }
 
 void EnvyCard::setMixerCaptureVolume(int index, LeftRight channel, int vol, int stereo) {
@@ -512,7 +520,7 @@ void EnvyCard::setAnalogRoute(int index, LeftRight channel, const QString& sound
     SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, ANALOG_PLAYBACK_ROUTE_NAME);
     snd_ctl_elem_value_set_index(&val, 2 * index + channel);
 
-    kDebug() << k_funcinfo << "new route: " << soundSource;
+    kDebug() << "new route: " << soundSource;
     snd_ctl_elem_value_set_enumerated(&val, 0, mRoutes.indexOf(soundSource));
     writeSndCtl(val);
 }
@@ -521,13 +529,13 @@ void EnvyCard::setDigitalRoute(int index, LeftRight channel, const QString& soun
     SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, SPDIF_PLAYBACK_ROUTE_NAME);
     snd_ctl_elem_value_set_index(&val, 2 * index + channel);
 
-    kDebug() << k_funcinfo << "new route: " << soundSource;
+    kDebug() << "new route: " << soundSource;
     snd_ctl_elem_value_set_enumerated(&val, 0, mRoutes.indexOf(soundSource));
     writeSndCtl(val);
 }
 
 void EnvyCard::setEnumConfig(const QString& key, const QString& value) {
-    kDebug() << k_funcinfo << key << " = " << value;
+    kDebug() << key << " = " << value;
     SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, key.toAscii());
     snd_ctl_elem_value_set_index(&cfg, 0);
     snd_ctl_elem_value_set_enumerated(&cfg, 0, mConfigEnums[key].indexOf(value));
@@ -535,7 +543,7 @@ void EnvyCard::setEnumConfig(const QString& key, const QString& value) {
 }
 
 void EnvyCard::setBoolConfig(const QString& key, bool value) {
-    kDebug() << k_funcinfo << key << " = " << value;
+    kDebug() << key << " = " << value;
     SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, key.toAscii());
     snd_ctl_elem_value_set_index(&cfg, 0);
     snd_ctl_elem_value_set_boolean(&cfg, 0, value);
