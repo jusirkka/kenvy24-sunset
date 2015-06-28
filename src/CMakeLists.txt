@@ -16,17 +16,17 @@ SET(kenvy24gui_SRCS
 
 set(kenvy24gui_SRCS
     ${kenvy24gui_SRCS}
-    ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24_sunset.xml
+    ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml
 )
 
 qt4_generate_dbus_interface(
     dbusiface.h
-    org.kvanttiapina.kenvy24_sunset.xml
+    com.github.kenvy24_sunset.xml
     OPTIONS -M
 )
 
 qt4_add_dbus_adaptor(kenvy24gui_SRCS
-    ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24_sunset.xml
+    ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml
     dbusiface.h
     DBusIface
 )
@@ -43,8 +43,6 @@ set(kenvy24gui_UI
 set(CMAKE_AUTOMOC TRUE)
 
 
-#set_target_properties(${kenvy24gui_SRCS} PROPERTIES AUTOMOC TRUE)
-
 kde4_add_ui_files(kenvy24gui_SRCS ${kenvy24gui_UI})
 
 
@@ -59,7 +57,7 @@ install(TARGETS kenvy24-sunset DESTINATION bin)
 
 install(FILES kenvy24-sunset.png DESTINATION share/apps/kenvy24/pics)
 install(FILES kenvy24-sunset.desktop DESTINATION share/applications/kde)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.kvanttiapina.kenvy24_sunset.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 
 kde4_install_icons(hicolor)
 

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Exec=kenvy24-sunset
+Type=Application
+Icon=kenvy24-sunset
+GenericName=Sound Mixer
+Name=Kenvy24-Sunset
+X-KDE-StartupNotify=true
+X-DBUS-StartupType=Unique
+Categories=Qt;KDE;AudioVideo;Audio;Mixer;

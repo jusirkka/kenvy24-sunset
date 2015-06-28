@@ -30,7 +30,7 @@
 class DBusIface : public QObject
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.kvanttiapina.kenvy24_sunset")
+    Q_CLASSINFO("D-Bus Interface", "com.github.kenvy24_sunset")
 
 public:
 
