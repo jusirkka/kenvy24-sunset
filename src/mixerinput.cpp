@@ -30,7 +30,11 @@
 #include <kconfig.h>
 #include <kdebug.h>
 
-MixerInput::MixerInput(QWidget* parent) : QWidget(parent), mUI(new Ui::MixerInput) {
+MixerInput::MixerInput(QWidget* parent) :
+    QWidget(parent),
+    inSlotFlag(false),
+    inEventFlag(false),
+    mUI(new Ui::MixerInput) {
     mUI->setupUi(this);
     mVDelta = 0;
     mSDelta = 0;
@@ -337,7 +341,7 @@ void MixerInput::on_rightStereo_valueChanged(int right) {
 }
 
 void MixerInput::on_checkLock_toggled(bool locked) {
-    kDebug()  << "entering";
+    kDebug()  << "entering" << locked;
     if (locked) {
         mVDelta = mUI->leftVolume->value() - mUI->rightVolume->value();
         mSDelta = mUI->leftStereo->value() - mUI->rightStereo->value();

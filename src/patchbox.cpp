@@ -28,6 +28,8 @@
 
 PatchBox::PatchBox(QWidget* parent):
     QWidget(parent),
+    inSlotFlag(false),
+    inEventFlag(false),
     mUI(new Ui::PatchBox),
     mLGroup(new QButtonGroup),
     mRGroup(new QButtonGroup)
