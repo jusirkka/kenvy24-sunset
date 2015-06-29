@@ -45,7 +45,7 @@ class MainWindow: public KMainWindow {
 
 public:
 
-    MainWindow(DBusIface*);
+    MainWindow(DBusIface*, bool);
     virtual ~MainWindow();
 
 public slots:

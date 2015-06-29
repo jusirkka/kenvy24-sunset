@@ -10,7 +10,7 @@ class KEnvy24App : public KUniqueApplication
 {
     Q_OBJECT
     public:
-        KEnvy24App();
+        KEnvy24App(bool docked);
         virtual ~KEnvy24App();
         int newInstance ();
 
@@ -22,6 +22,7 @@ class KEnvy24App : public KUniqueApplication
     private:
         MainWindow *mEnvy;
         DBusIface *mDBus;
+        bool mDocked;
 };
 
 #endif // Kenvy24App_h

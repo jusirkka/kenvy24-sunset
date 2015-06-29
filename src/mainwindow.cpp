@@ -57,7 +57,7 @@
 
 #define RC QString("%1rc").arg(kapp->applicationName())
 
-MainWindow::MainWindow(DBusIface* dbus):
+MainWindow::MainWindow(DBusIface* dbus, bool docked):
     KMainWindow(),
     inSlotFlag(false),
     inEventFlag(false),
@@ -141,7 +141,7 @@ MainWindow::MainWindow(DBusIface* dbus):
     file_quit->disconnect();
     connect(file_quit, SIGNAL(triggered()), this, SLOT(on_actionQuit_triggered()));
 
-    if (m_startDocked) {
+    if (docked || m_startDocked) {
         hide();
     } else {
         show();

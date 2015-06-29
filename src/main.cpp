@@ -38,7 +38,10 @@ static const char description[] =
 int main(int argc, char **argv)
 {
     kDebug() << "starting";
+
     KCmdLineOptions options;
+    options.add("docked", ki18n("start docked"));
+
     KAboutData about(
         "kenvy24-sunset", 0,
         ki18n("KEnvy24Sunset"), VERSION,
@@ -52,7 +55,7 @@ int main(int argc, char **argv)
 
    if (!KEnvy24App::start()) return 0;
 
-   KEnvy24App *app = new KEnvy24App();
+   KEnvy24App *app = new KEnvy24App(KCmdLineArgs::parsedArgs()->isSet("docked"));
    int ret = app->exec();
    delete app;
    return ret;

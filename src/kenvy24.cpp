@@ -25,18 +25,18 @@
 #include <kdebug.h>
 #include "dbusiface.h"
 
-KEnvy24App::KEnvy24App(): KUniqueApplication(), mEnvy(0) {}
+KEnvy24App::KEnvy24App(bool docked): KUniqueApplication(), mEnvy(0), mDocked(docked) {}
 
 
 KEnvy24App::~KEnvy24App() {
-    //  delete mEnvy;
+    // delete mEnvy;
 }
 
 
 int KEnvy24App::newInstance() {
     if (mEnvy) return KUniqueApplication::newInstance();
     mDBus = new DBusIface(this);
-    mEnvy = new MainWindow(mDBus);
+    mEnvy = new MainWindow(mDBus, mDocked);
 
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);
