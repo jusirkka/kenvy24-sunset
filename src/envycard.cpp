@@ -241,7 +241,7 @@ EnvyCard& EnvyCard::Instance() {
 }
 
 
-void EnvyCard::configAddresses(const IndexList& channels) {
+void EnvyCard::configAddresses(const QList<int>& channels) {
     mPeaks.clear();
     StereoLevels nosound(0, 0);
     foreach (int channel, channels) {

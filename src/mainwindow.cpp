@@ -89,10 +89,13 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI->mixerAnalogIn->setup(mCard->AnalogInAddress(), "mixer-analog-in", "Analog In", mRouting);
     mUI->mixerDigitalIn->setup(mCard->DigitalInAddress(), "mixer-digital-in", "Digital In", mRouting);
 
+    mRouting[mCard->DACAddress()] = mUI->masterVolume;
+
+    mCard->configAddresses(mRouting.keys());
+
     mUI->analogOut->setup(mCard->AnalogOutAddress(), "router-analog-out", "Analog Out", mRouting);
     mUI->digitalOut->setup(mCard->DigitalOutAddress(), "router-digital-out", "Digital Out", mRouting);
 
-    mRouting[mCard->DACAddress()] = mUI->masterVolume;
 
     connect(dbus, SIGNAL(signalPCMVolumeDown()), mUI->mixerPCM1, SLOT(dbus_VolumeDown()));
     connect(dbus, SIGNAL(signalPCMVolumeUp()), mUI->mixerPCM1, SLOT(dbus_VolumeUp()));
@@ -499,6 +502,7 @@ void MainWindow::writeProfile() {
 
 
     mUI->mixerPCM1->saveToConfig(&current);
+    mUI->mixerPCM4->saveToConfig(&current);
     mUI->mixerAnalogIn->saveToConfig(&current);
     mUI->mixerDigitalIn->saveToConfig(&current);
 

@@ -151,7 +151,7 @@ public:
 
     static EnvyCard& Instance();
 
-    void configAddresses(const IndexList&);
+    void configAddresses(const QList<int>&);
 
     /**
      * This method reads current peak levels from the sound card.
