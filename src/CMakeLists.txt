@@ -42,6 +42,7 @@ set(kenvy24gui_UI
 
 set(CMAKE_AUTOMOC TRUE)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 
 kde4_add_ui_files(kenvy24gui_SRCS ${kenvy24gui_UI})
 

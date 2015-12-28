@@ -20,11 +20,9 @@
 #ifndef _MASTERVOLUME_H_INCLUDED_
 #define _MASTERVOLUME_H_INCLUDED_
 
-#include "envystructs.h"
+#include "envycard.h"
 #include <QWidget>
 #include <ksharedconfig.h>
-
-class EnvyCard;
 
 namespace Ui {
 class MasterVolume;

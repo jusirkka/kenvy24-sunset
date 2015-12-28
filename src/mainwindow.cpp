@@ -36,10 +36,6 @@
 #include <QTimer>
 #include <kmessagebox.h>
 
-#define L_MASTER 0
-#define L_PCM 1
-#define L_ANALOG_IN 2
-#define L_DIGITAL_IN 3
 
 #define ENUM_RATE320 "32000"
 #define ENUM_RATE441 "44100"
@@ -65,9 +61,16 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI(new Ui::MainWindow),
     m_startDocked(false),
     m_shuttingDown(false),
-    mUpdateInterval(20),
-    mCard(new EnvyCard)
+    mUpdateInterval(20)
 {
+
+    try {
+        mCard = &EnvyCard::Instance();
+    } catch (CardNotFound) {
+        KMessageBox::error(this, "Cannot find an Envy24 chip based sound card in your system. Will now quit!");
+        QTimer::singleShot(10, kapp, SLOT(quit()));
+        return;
+    }
 
 
     mUI->setupUi(this);
@@ -80,12 +83,16 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI->profiles->addAction(mUI->actionDeleteProfile);
 
 
-    mUI->mixerPCM1->setup(0, "mixer-pcm-in", "PCM Playback");
-    mUI->mixerAnalogIn->setup(0, "mixer-analog-in", "Analog In");
-    mUI->mixerDigitalIn->setup(0, "mixer-digital-in", "Digital In");
 
-    mUI->analogOut->setup(0, "router-analog-out", "Analog Out");
-    mUI->digitalOut->setup(0, "router-digital-out", "Digital Out");
+    mUI->mixerPCM4->setup(mCard->PCMAddress(4), "mixer-iec958-in", "IEC958 Playback", mRouting);
+    mUI->mixerPCM1->setup(mCard->PCMAddress(0), "mixer-pcm-in", "PCM Playback", mRouting);
+    mUI->mixerAnalogIn->setup(mCard->AnalogInAddress(), "mixer-analog-in", "Analog In", mRouting);
+    mUI->mixerDigitalIn->setup(mCard->DigitalInAddress(), "mixer-digital-in", "Digital In", mRouting);
+
+    mUI->analogOut->setup(mCard->AnalogOutAddress(), "router-analog-out", "Analog Out", mRouting);
+    mUI->digitalOut->setup(mCard->DigitalOutAddress(), "router-digital-out", "Digital Out", mRouting);
+
+    mRouting[mCard->DACAddress()] = mUI->masterVolume;
 
     connect(dbus, SIGNAL(signalPCMVolumeDown()), mUI->mixerPCM1, SLOT(dbus_VolumeDown()));
     connect(dbus, SIGNAL(signalPCMVolumeUp()), mUI->mixerPCM1, SLOT(dbus_VolumeUp()));
@@ -99,11 +106,6 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     connect(dbus, SIGNAL(signalDigitalVolumeUp()), mUI->mixerDigitalIn, SLOT(dbus_VolumeUp()));
     connect(dbus, SIGNAL(signalDigitalVolumeMute()), mUI->mixerDigitalIn, SLOT(dbus_VolumeMute()));
 
-    mLevelIndices[L_MASTER] = 20;
-    mLevelIndices[L_PCM] = 0;
-    mLevelIndices[L_ANALOG_IN] = 10;
-    mLevelIndices[L_DIGITAL_IN] = 12;
-
     setupHWTab();
 
     mTimer = new QTimer(this);
@@ -112,11 +114,6 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     readState();
     readProfiles();
 
-    if (!mCard->foundEnvyCard()) {
-        KMessageBox::error(this, "Cannot find an Envy24 chip based sound card in your system. Will now quit!");
-        QTimer::singleShot(10, this, SLOT(on_actionQuit_triggered()));
-        return;
-    }
 
     connectToCard();
     connectFromCard();
@@ -210,56 +207,58 @@ void MainWindow::setupHWTab() {
 void MainWindow::connectFromCard() {
     kDebug() << "entering";
 
-    QString capture("capture");
-    QString spdif("spdif");
-
-    mUI->mixerAnalogIn->connectFromCard(mCard, capture);
-    mUI->mixerDigitalIn->connectFromCard(mCard, spdif);
+    mUI->mixerAnalogIn->connectFromCard(mCard);
+    mUI->mixerDigitalIn->connectFromCard(mCard);
     mUI->mixerPCM1->connectFromCard(mCard);
+    mUI->mixerPCM4->connectFromCard(mCard);
     mUI->masterVolume->connectFromCard(mCard);
 
-    QString digital("digital");
 
     mUI->analogOut->connectFromCard(mCard);
-    mUI->digitalOut->connectFromCard(mCard, digital);
+    mUI->digitalOut->connectFromCard(mCard);
 
     // Hardware settings tab
-    connect(mCard, SIGNAL(boolConfigUpdated(const QString&, bool)), SLOT(updateBoolConfig(const QString&, bool)));
-    connect(mCard, SIGNAL(enumConfigUpdated(const QString&, const QString&)), SLOT(updateEnumConfig(const QString&, const QString&)));
+    connect(mCard, SIGNAL(boolConfigChanged(QString,bool)), SLOT(updateBoolConfig(const QString&, bool)));
+    connect(mCard, SIGNAL(enumConfigChanged(const QString&, const QString&)), SLOT(updateEnumConfig(const QString&, const QString&)));
 
     kDebug() << "leaving";
 }
 
 void MainWindow::connectToCard() {
     kDebug() << "entering";
-    QString capture("capture");
-    QString spdif("spdif");
 
-    mUI->mixerAnalogIn->connectToCard(mCard, capture);
-    mUI->mixerDigitalIn->connectToCard(mCard, spdif);
+    mUI->mixerAnalogIn->connectToCard(mCard);
+    mUI->mixerDigitalIn->connectToCard(mCard);
     mUI->mixerPCM1->connectToCard(mCard);
+    mUI->mixerPCM4->connectToCard(mCard);
     mUI->masterVolume->connectToCard(mCard);
 
-    QString digital("digital");
-
     mUI->analogOut->connectToCard(mCard);
-    mUI->digitalOut->connectToCard(mCard, digital);
+    mUI->digitalOut->connectToCard(mCard);
 
     // Hardware settings tab
-    connect(this, SIGNAL(boolConfigChanged(const QString&, bool)), mCard, SLOT(setBoolConfig(const QString&, bool)));
-    connect(this, SIGNAL(enumConfigChanged(const QString&, const QString&)), mCard, SLOT(setEnumConfig(const QString&, const QString&)));
+    connect(this, SIGNAL(boolConfigChanged(const QString&, bool)), mCard, SLOT(on_slot_boolConfigChanged(QString,bool)));
+    connect(this, SIGNAL(enumConfigChanged(const QString&, const QString&)), mCard, SLOT(on_slot_enumConfigChanged(QString,QString)));
 
     kDebug() << "leaving";
 }
 
 
 void MainWindow::updateMeters() {
-    EnvyCard::PeakList peaks = mCard->getPeaks(mLevelIndices);
+    EnvyCard::PeakMap levels = mCard->peaks();
 
-    mUI->mixerAnalogIn->updatePeaks(peaks[L_ANALOG_IN]);
-    mUI->mixerDigitalIn->updatePeaks(peaks[L_DIGITAL_IN]);
-    mUI->mixerPCM1->updatePeaks(peaks[L_PCM]);
-    mUI->masterVolume->updatePeaks(peaks[L_MASTER]);
+    foreach (int address, levels.keys()) {
+       MixerInput* mix = qobject_cast<MixerInput*>(mRouting[address]);
+       if (mix) {
+           mix->updatePeaks(levels[address]);
+           continue;
+       }
+       MasterVolume* master = qobject_cast<MasterVolume*>(mRouting[address]);
+       if (master) {
+           master->updatePeaks(levels[address]);
+           continue;
+       }
+    }
 }
 
 
@@ -519,6 +518,7 @@ void MainWindow::createDefaultProfile() {
     KConfigGroup profiles(&base, "Profiles");
     KConfigGroup current(&profiles, "default");
     mUI->mixerPCM1->saveToConfig(&current);
+    mUI->mixerPCM4->saveToConfig(&current);
     mUI->mixerAnalogIn->saveToConfig(&current);
     mUI->mixerDigitalIn->saveToConfig(&current);
     mUI->masterVolume->saveToConfig(&current);
@@ -580,6 +580,7 @@ void MainWindow::loadProfile() {
 
 
     mUI->mixerPCM1->loadFromConfig(&current);
+    mUI->mixerPCM4->loadFromConfig(&current);
     mUI->mixerAnalogIn->loadFromConfig(&current);
     mUI->mixerDigitalIn->loadFromConfig(&current);
 

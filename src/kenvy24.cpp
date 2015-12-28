@@ -28,9 +28,7 @@
 KEnvy24App::KEnvy24App(bool docked): KUniqueApplication(), mEnvy(0), mDocked(docked) {}
 
 
-KEnvy24App::~KEnvy24App() {
-    // delete mEnvy;
-}
+KEnvy24App::~KEnvy24App() {}
 
 
 int KEnvy24App::newInstance() {
@@ -38,10 +36,10 @@ int KEnvy24App::newInstance() {
     mDBus = new DBusIface(this);
     mEnvy = new MainWindow(mDBus, mDocked);
 
+
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);
     }
-    // mEnvy->show();
     return 0;
 }
 

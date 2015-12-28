@@ -44,11 +44,11 @@ MasterVolume::~MasterVolume() {
 }
 
 void MasterVolume::connectToCard(EnvyCard* envyCard) {
-    connect(this, SIGNAL(adjusted(LeftRight, int)), envyCard, SLOT(setDACVolume(LeftRight, int)));
+    connect(this, SIGNAL(adjusted(LeftRight, int)), envyCard, SLOT(on_slot_masterVolumeChanged(LeftRight,int)));
 }
 
 void MasterVolume::connectFromCard(EnvyCard* envyCard) {
-    connect(envyCard, SIGNAL(analogUpdateDACVolume(LeftRight, int)), this, SLOT(analogUpdateDACVolume(LeftRight, int)));
+    connect(envyCard, SIGNAL(masterVolumeChanged(LeftRight,int)), this, SLOT(analogUpdateDACVolume(LeftRight, int)));
 }
 
 void MasterVolume::updatePeaks(StereoLevels level) {

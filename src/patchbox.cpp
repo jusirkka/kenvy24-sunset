@@ -79,36 +79,25 @@ PatchBox::~PatchBox() {
 }
 
 
-void PatchBox::setup(int index, const QString& name, const QString& title) {
-    mIndex = index;
+void PatchBox::setup(int address, const QString& name, const QString& title, Routing& routing) {
+    mAddress = address;
+    routing[mAddress] = this;
     mUI->patchGroup->setTitle(title);
     setObjectName(name);
 }
 
-void PatchBox::connectToCard(EnvyCard* envyCard, const QString& outputType) {
-    if (outputType == "digital") {
-        connect(this, SIGNAL(routeChanged(int, LeftRight, const QString&)),
-               envyCard, SLOT(setDigitalRoute(int, LeftRight, const QString&)));
-        return;
-    }
-
+void PatchBox::connectToCard(EnvyCard* envyCard) {
     connect(this, SIGNAL(routeChanged(int, LeftRight, const QString&)),
-           envyCard, SLOT(setAnalogRoute(int, LeftRight, const QString&)));
+            envyCard, SLOT(on_slot_mixerRouteChanged(int, LeftRight, const QString&)));
 }
 
-void PatchBox::connectFromCard(EnvyCard* envyCard, const QString& outputType) {
-    if (outputType == "digital") {
-        connect(envyCard, SIGNAL(digitalRouteUpdated(int, LeftRight, const QString&)),
-                             SLOT(updateRoute(int, LeftRight, const QString&)));
-        return;
-    }
-
-    connect(envyCard, SIGNAL(analogRouteUpdated(int, LeftRight, const QString&)),
-                         SLOT(updateRoute(int, LeftRight, const QString&)));
+void PatchBox::connectFromCard(EnvyCard* envyCard) {
+    connect(envyCard, SIGNAL(mixerRouteChanged(int,LeftRight,const QString&)),
+            SLOT(updateRoute(int, LeftRight, const QString&)));
 }
-        
+
 void PatchBox::saveToConfig(KConfigBase* config) {
-    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mIndex));
+    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mAddress));
     routing.writeEntry("locked", mUI->checkLock->isChecked());
     routing.writeEntry(QString("left-route"), mLGroup->checkedId());
     routing.writeEntry(QString("right-route"), mRGroup->checkedId());
@@ -117,7 +106,7 @@ void PatchBox::saveToConfig(KConfigBase* config) {
 void PatchBox::loadFromConfig(KConfigBase* config) {
     kDebug()  << "entering";
 
-    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mIndex));
+    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mAddress));
 
     int id = routing.readEntry("left-route", mLSources[R_SRC_MIXER]);
     mLGroup->button(id)->setChecked(true);
@@ -133,8 +122,8 @@ void PatchBox::loadFromConfig(KConfigBase* config) {
     kDebug()  << "leaving";
 }
 
-void PatchBox::updateRoute(int index, LeftRight channel, const QString& soundSource) {
-    if (index != mIndex) return;
+void PatchBox::updateRoute(int address, LeftRight channel, const QString& soundSource) {
+    if (address != mAddress) return;
 
     kDebug()  << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
@@ -156,7 +145,7 @@ void PatchBox::leftPressed(int btn) {
     if (!inSlotFlag) {
         const QString& soundSource = mLSources.key(btn);
         kDebug()  << "notify card " << soundSource;
-        emit routeChanged(mIndex, LEFT, soundSource);
+        emit routeChanged(mAddress, LEFT, soundSource);
     }
     kDebug()  << "leaving";
 }
@@ -167,7 +156,7 @@ void PatchBox::rightPressed(int btn) {
     if (!inSlotFlag) {
         const QString& soundSource = mRSources.key(btn);
         kDebug()  << "notify card " << soundSource;
-        emit routeChanged(mIndex, RIGHT, soundSource);
+        emit routeChanged(mAddress, RIGHT, soundSource);
     }
     kDebug()  << "leaving";
 }
@@ -185,7 +174,7 @@ void PatchBox::leftNotified(int btn) {
 
     ExclusiveFlag inEvent(inEventFlag);
     kDebug()  << "notify card " <<  searchTerm;
-    emit routeChanged(mIndex, LEFT, searchTerm);
+    emit routeChanged(mAddress, LEFT, searchTerm);
 
     kDebug()  << "leaving";
 }
@@ -203,7 +192,7 @@ void PatchBox::rightNotified(int btn) {
 
     ExclusiveFlag inEvent(inEventFlag);
     kDebug()  << "notify card " <<  searchTerm;
-    emit routeChanged(mIndex, RIGHT, searchTerm);
+    emit routeChanged(mAddress, RIGHT, searchTerm);
 
     kDebug()  << "leaving";
 }

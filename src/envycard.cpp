@@ -1,23 +1,3 @@
-/***************************************************************************
- *   Copyright (C) 2007 by Valentin Rusu   *
- *   kenvy24@rusu.info   *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
-
 #include "envycard.h"
 
 #include <assert.h>
@@ -57,89 +37,116 @@
 #define DAC_VOLUME_NAME	"DAC Volume"
 #define ADC_VOLUME_NAME	"ADC Volume"
 
-EnvyCard::SndCtlElemValue::SndCtlElemValue(_snd_ctl_elem_iface iface, const char* name) {
-  snd_ctl_elem_value_malloc(&val);
-  snd_ctl_elem_value_set_interface(val, iface);
-  snd_ctl_elem_value_set_name(val, name);
+#define PEAK_CONTROL_NAME "Multi Track Peak"
+
+ChannelState StereoLevels::state(LeftRight k) const {
+    if (k == LEFT) {
+        return ChannelState(left, right);
+    }
+    return ChannelState(right, left);
+}
+
+StereoLevels ChannelState::levels(LeftRight k) const {
+       if (k == LEFT) {
+           return StereoLevels(volume, stereo);
+       }
+       return StereoLevels(stereo, volume);
+}
+
+
+EnvyCard::ControlElement::ControlElement(_snd_ctl_elem_iface iface, const QString& name) {
+  snd_ctl_elem_value_malloc(&element);
+  snd_ctl_elem_value_set_interface(element, iface);
+  snd_ctl_elem_value_set_name(element, name.toAscii().constData());
 }
                                           
-EnvyCard::SndCtlElemValue::SndCtlElemValue(_snd_ctl_elem_iface iface, const char* name, int index) {
-    snd_ctl_elem_value_malloc(&val);
-    snd_ctl_elem_value_set_interface(val, iface);
-    snd_ctl_elem_value_set_name(val, name);
-    snd_ctl_elem_value_set_index(val, index);
+EnvyCard::ControlElement::ControlElement(_snd_ctl_elem_iface iface, const QString& name, int index) {
+    snd_ctl_elem_value_malloc(&element);
+    snd_ctl_elem_value_set_interface(element, iface);
+    snd_ctl_elem_value_set_name(element, name.toAscii().constData());
+    snd_ctl_elem_value_set_index(element, index);
 }
 
-EnvyCard::SndCtlElemValue::~SndCtlElemValue() {
-  snd_ctl_elem_value_free(val);
+EnvyCard::ControlElement::~ControlElement() {
+    snd_ctl_elem_value_free(element);
 }
-                                           
 
-EnvyCard::EnvyCard() : QObject(),
-    cardName(),
-    mPeaks(22)
+int EnvyCard::ControlElement::get(int index) const {
+    return snd_ctl_elem_value_get_integer(element, index);
+}
+void EnvyCard::ControlElement::set(int index, int value) const {
+    snd_ctl_elem_value_set_integer(element, index, value);
+}
+
+
+int EnvyCard::ControlElement::write(snd_ctl_t* card) const {
+    kDebug() << "entering";
+    int err = snd_ctl_elem_write(card, element);
+    if (err < 0) kWarning() << "Unable to write value: " << snd_strerror(err);
+    kDebug() << "leaving";
+    return err;
+}
+
+int EnvyCard::ControlElement::read(snd_ctl_t* card) const {
+    // kDebug() << "entering";
+    int err = snd_ctl_elem_read(card, element);
+    if (err < 0) kWarning() << "Unable to read value: " << snd_strerror(err);
+    // kDebug() << "leaving";
+    return err;
+}
+
+
+
+EnvyCard::EnvyCard():
+    QObject(),
+    mRawPeaks(SND_CTL_ELEM_IFACE_PCM, PEAK_CONTROL_NAME)
 {
-    assert(instance == 0);
-    instance = this;
-    
-    if (findCard()) {
-        SndCtlElemValue val(SND_CTL_ELEM_IFACE_CARD, "ICE1712 EEPROM");
-        
-        int err;
-        if ((err = snd_ctl_elem_read(ctl, &val)) < 0) {
-            fprintf(stderr, "Unable to read EEPROM contents: %s\n", snd_strerror(err));
-            exit(EXIT_FAILURE);
+
+    // Initialise Card
+    snd_ctl_card_info_t *hw_info;
+    snd_ctl_card_info_alloca(&hw_info);
+    mCard = 0;
+    for (int index=0; index < 8; index++) {
+        QString name = QString("hw:%1").arg(index);
+        int ok = snd_ctl_open(&mCard, name.toAscii().constData(), 0);
+        if (ok < 0) continue;
+        ok = snd_ctl_card_info(mCard, hw_info);
+        if (ok < 0) {
+            snd_ctl_close(mCard);
+            mCard = 0;
+            continue;
         }
-        memcpy(&card_eeprom, snd_ctl_elem_value_get_bytes(&val), 32);
-    
-        snd_ctl_elem_value_malloc(&peaks);
-        snd_ctl_elem_value_set_interface(peaks, SND_CTL_ELEM_IFACE_PCM);
-        snd_ctl_elem_value_set_name(peaks, "Multi Track Peak");
-
-        initPatchbay();
-        initConfig();
-        initEvents();
+        QString driver = snd_ctl_card_info_get_driver(hw_info);
+        if (driver != "ICE1712") {
+            snd_ctl_close(mCard);
+            mCard = 0;
+            continue;
+        }
+        /* found */
+        break;
     }
-    
-}
 
-EnvyCard::~EnvyCard() {
-  while (!eventNotifiers.empty()) {
-      delete eventNotifiers.back();
-      eventNotifiers.pop_back();
-  }
-  snd_ctl_close(ctl);
-}
+    if (!mCard) throw CardNotFound();
 
-EnvyCard* EnvyCard::instance = 0;
-EnvyCard* EnvyCard::getInstance() {return instance;}
-
-
-void EnvyCard::initPatchbay() {
     snd_ctl_elem_info_t *info;
-
     snd_ctl_elem_info_alloca(&info);
-
     snd_ctl_elem_info_set_interface(info, SND_CTL_ELEM_IFACE_MIXER);
+
+    // Patchbay
     snd_ctl_elem_info_set_name(info, ANALOG_PLAYBACK_ROUTE_NAME);
     snd_ctl_elem_info_set_numid(info, 0);
     snd_ctl_elem_info_set_index(info, 0);
-    snd_ctl_elem_info(ctl, info);
+    snd_ctl_elem_info(mCard, info);
     int numRoutes = snd_ctl_elem_info_get_items(info);
     for (int i = 0; i < numRoutes; i++) {
         snd_ctl_elem_info_set_item(info, i);
-        snd_ctl_elem_info(ctl, info);
+        snd_ctl_elem_info(mCard, info);
         mRoutes << QString(snd_ctl_elem_info_get_item_name(info));
         kDebug() << i << ": " << mRoutes[i];
     }
-}
-
-void EnvyCard::initConfig() {
-    snd_ctl_elem_info_t *info;
-    snd_ctl_elem_info_alloca(&info);
-    snd_ctl_elem_info_set_interface(info, SND_CTL_ELEM_IFACE_MIXER);
 
 
+    // Configuration items
     QStringList keys;
     keys << QString(HW_ENUM_INTERNAL_CLOCK) << QString(HW_ENUM_CLOCK_DEFAULT) << QString(HW_ENUM_DEEMPHASIS);
 
@@ -148,71 +155,131 @@ void EnvyCard::initConfig() {
         snd_ctl_elem_info_set_name(info, key.toAscii());
         snd_ctl_elem_info_set_numid(info, 0);
         snd_ctl_elem_info_set_index(info, 0);
-        snd_ctl_elem_info(ctl, info);
+        snd_ctl_elem_info(mCard, info);
         int numItems = snd_ctl_elem_info_get_items(info);
         for (int i = 0; i < numItems; i++) {
             snd_ctl_elem_info_set_item(info, i);
-            snd_ctl_elem_info(ctl, info);
+            snd_ctl_elem_info(mCard, info);
             enums << QString(snd_ctl_elem_info_get_item_name(info));
             kDebug() << i << ": " << (enums)[i];
         }
         mConfigEnums[key] = enums;
     }
-}
 
 
-void EnvyCard::initEvents() {
-    int npfds = snd_ctl_poll_descriptors_count(ctl);
+    // Event Listener
+
+    mHandlers[MULTI_PLAYBACK_VOLUME] = &EnvyCard::on_event_mixerVolumeChanged;
+    mHandlers[HW_MULTI_CAPTURE_VOLUME] = &EnvyCard::on_event_mixerVolumeChanged;
+    mHandlers[IEC958_MULTI_CAPTURE_VOLUME] = &EnvyCard::on_event_mixerVolumeChanged;
+
+    mHandlers[MULTI_PLAYBACK_SWITCH] = &EnvyCard::on_event_mixerMuteSwitchChanged;
+    mHandlers[HW_MULTI_CAPTURE_SWITCH] = &EnvyCard::on_event_mixerMuteSwitchChanged;
+    mHandlers[IEC958_MULTI_CAPTURE_SWITCH] = &EnvyCard::on_event_mixerMuteSwitchChanged;
+
+
+    mHandlers[ANALOG_PLAYBACK_ROUTE_NAME] = &EnvyCard::on_event_mixerRouteChanged;
+    mHandlers[SPDIF_PLAYBACK_ROUTE_NAME] = &EnvyCard::on_event_mixerRouteChanged;
+
+    mHandlers[DAC_VOLUME_NAME] = &EnvyCard::on_event_masterVolumeChanged;
+
+    mHandlers[HW_ENUM_INTERNAL_CLOCK] = &EnvyCard::on_event_enumConfigChanged;
+    mHandlers[HW_ENUM_CLOCK_DEFAULT] = &EnvyCard::on_event_enumConfigChanged;
+    mHandlers[HW_ENUM_DEEMPHASIS] = &EnvyCard::on_event_enumConfigChanged;
+
+    mHandlers[HW_BOOL_RATE_LOCKING] = &EnvyCard::on_event_boolConfigChanged;
+    mHandlers[HW_BOOL_RATE_RESET] = &EnvyCard::on_event_boolConfigChanged;
+
+    /* TODO "Multi Track Volume Rate" */
+
+
+    int npfds = snd_ctl_poll_descriptors_count(mCard);
     if (npfds > 0) {
         struct pollfd* pfds = (pollfd*)alloca(sizeof(*pfds) * npfds);
-        npfds = snd_ctl_poll_descriptors(ctl, pfds, npfds);
+        npfds = snd_ctl_poll_descriptors(mCard, pfds, npfds);
         for (int i = 0; i < npfds; i++) {
             kDebug() << "creating event notifier for fd = " << pfds[i].fd;
             QSocketNotifier* eventNotifier = new QSocketNotifier(pfds[i].fd, QSocketNotifier::Read);
             connect(eventNotifier, SIGNAL(activated(int)), SLOT(driverEvent(int)));
-            eventNotifiers.push_back(eventNotifier);
+            mEventNotifiers.push_back(eventNotifier);
         }
-        snd_ctl_subscribe_events(ctl, 1);
+        snd_ctl_subscribe_events(mCard, 1);
     }
+
+    // Routing tables
+    mAddressBase[MULTI_PLAYBACK_VOLUME] = 0;
+    mAddressBase[HW_MULTI_CAPTURE_VOLUME] = 10;
+    mAddressBase[IEC958_MULTI_CAPTURE_VOLUME] = 12;
+    mAddressBase[MULTI_PLAYBACK_SWITCH] = 0;
+    mAddressBase[HW_MULTI_CAPTURE_SWITCH] = 10;
+    mAddressBase[IEC958_MULTI_CAPTURE_SWITCH] = 12;
+    mAddressBase[ANALOG_PLAYBACK_ROUTE_NAME] = 30;
+    mAddressBase[SPDIF_PLAYBACK_ROUTE_NAME] = 32;
+    mAddressBase[DAC_VOLUME_NAME] = 20;
+
+    mSectionBase[0] = MULTI_PLAYBACK_VOLUME;
+    mSectionBase[10] = HW_MULTI_CAPTURE_VOLUME;
+    mSectionBase[12] = IEC958_MULTI_CAPTURE_VOLUME;
+    mSectionBase[30] = ANALOG_PLAYBACK_ROUTE_NAME;
+    mSectionBase[32] = SPDIF_PLAYBACK_ROUTE_NAME;
+    mSectionBase[20] = DAC_VOLUME_NAME;
+
+    mMuteSwitchSectionBase[0] = MULTI_PLAYBACK_SWITCH;
+    mMuteSwitchSectionBase[10] = HW_MULTI_CAPTURE_SWITCH;
+    mMuteSwitchSectionBase[12] = IEC958_MULTI_CAPTURE_SWITCH;
 }
 
 
-bool EnvyCard::findCard() {
-    char cardname[8];
-    int err;
-  
-    snd_ctl_card_info_t     *hw_info;
-    snd_ctl_card_info_alloca(&hw_info);
-  
-  // FIXME hard coded number of cards
-  for (cardNumber = 0; cardNumber < 8; cardNumber++) {
-      sprintf(cardname, "hw:%d", cardNumber);
-      if ((err = snd_ctl_open(&ctl, cardname, 0)) < 0)
-          continue;
-      if (snd_ctl_card_info(ctl, hw_info) < 0 ||
-          strcmp(snd_ctl_card_info_get_driver(hw_info), "ICE1712")) {
-          snd_ctl_close(ctl);
-          continue;
-      }
-      /* found */
-      cardName = cardname;
-      return true;
-  }
-  return false;
+EnvyCard::~EnvyCard() {
+    snd_ctl_close(mCard);
 }
 
-const EnvyCard::PeakList& EnvyCard::getPeaks(const IndexList& indices) {
-    int err;
-    err = snd_ctl_elem_read(ctl, peaks);
-    if (err < 0) {
-        kWarning() << "peak update failed" << snd_strerror(err);
-    }
 
-    for (int index = 0; index < indices.size(); index++) {
-        StereoLevels level;
-        level.left = snd_ctl_elem_value_get_integer(peaks, indices[index]);
-        level.right = snd_ctl_elem_value_get_integer(peaks, indices[index] + 1);
-        mPeaks[index] = level;
+EnvyCard& EnvyCard::Instance() {
+    static EnvyCard card;
+    return card;
+}
+
+
+void EnvyCard::configAddresses(const IndexList& channels) {
+    mPeaks.clear();
+    StereoLevels nosound(0, 0);
+    foreach (int channel, channels) {
+        mPeaks[channel] = nosound;
+    }
+}
+
+int EnvyCard::PCMAddress(int index) const {
+    return mAddressBase[MULTI_PLAYBACK_VOLUME] + 2 * index;
+}
+
+int EnvyCard::AnalogInAddress() const {
+    return mAddressBase[HW_MULTI_CAPTURE_VOLUME];
+}
+
+int EnvyCard::DigitalInAddress() const {
+    return mAddressBase[IEC958_MULTI_CAPTURE_VOLUME];
+}
+
+int EnvyCard::AnalogOutAddress() const {
+    return mAddressBase[ANALOG_PLAYBACK_ROUTE_NAME];
+}
+
+int EnvyCard::DigitalOutAddress() const {
+    return mAddressBase[SPDIF_PLAYBACK_ROUTE_NAME];
+}
+
+int EnvyCard::DACAddress() const {
+    return mAddressBase[DAC_VOLUME_NAME];
+}
+
+
+const EnvyCard::PeakMap& EnvyCard::peaks() {
+    if (mRawPeaks.read(mCard) < 0) return mPeaks;
+
+    foreach (int addr, mPeaks.keys()) {
+        StereoLevels level(mRawPeaks.get(addr), mRawPeaks.get(addr+1));
+        mPeaks[addr] = level;
     }
     return mPeaks;
 }
@@ -223,394 +290,231 @@ void EnvyCard::pulse() {
 
     kDebug() << "entering";
 
-    mixerUpdatePlaybackVolume(0);
-    mixerUpdatePlaybackVolume(1);
-    mixerUpdatePlaybackSwitch(0);
-    mixerUpdatePlaybackSwitch(1);
 
-    mixerUpdateInputVolume(0);
-    mixerUpdateInputVolume(1);
-    mixerUpdateInputSwitch(0);
-    mixerUpdateInputSwitch(1);
 
-    mixerUpdateSPDIFVolume(0);
-    mixerUpdateSPDIFVolume(1);
-    mixerUpdateSPDIFSwitch(0);
-    mixerUpdateSPDIFSwitch(1);
+    for (int index = 0; index < MAX_MULTI_CHANNELS; index++) {
+        on_event_mixerVolumeChanged(MULTI_PLAYBACK_VOLUME, 2 * index);
+        on_event_mixerVolumeChanged(MULTI_PLAYBACK_VOLUME, 2 * index + 1);
+        on_event_mixerMuteSwitchChanged(MULTI_PLAYBACK_SWITCH, 2 * index);
+        on_event_mixerMuteSwitchChanged(MULTI_PLAYBACK_SWITCH, 2 * index + 1);
+    }
 
-    dacVolumeUpdate(0);
-    dacVolumeUpdate(1);
+    on_event_mixerVolumeChanged(HW_MULTI_CAPTURE_VOLUME, 0);
+    on_event_mixerVolumeChanged(HW_MULTI_CAPTURE_VOLUME, 1);
+    on_event_mixerMuteSwitchChanged(HW_MULTI_CAPTURE_SWITCH, 0);
+    on_event_mixerMuteSwitchChanged(HW_MULTI_CAPTURE_SWITCH, 1);
 
-    patchbayAnalogUpdate(0);
-    patchbayAnalogUpdate(1);
+    on_event_mixerVolumeChanged(IEC958_MULTI_CAPTURE_VOLUME, 0);
+    on_event_mixerVolumeChanged(IEC958_MULTI_CAPTURE_VOLUME, 1);
+    on_event_mixerMuteSwitchChanged(IEC958_MULTI_CAPTURE_SWITCH, 0);
+    on_event_mixerMuteSwitchChanged(IEC958_MULTI_CAPTURE_SWITCH, 1);
 
-    patchbayDigitalUpdate(0);
-    patchbayDigitalUpdate(1);
 
-    enumConfigUpdate(HW_ENUM_INTERNAL_CLOCK);
-    enumConfigUpdate(HW_ENUM_CLOCK_DEFAULT);
-    enumConfigUpdate(HW_ENUM_DEEMPHASIS);
-    boolConfigUpdate(HW_BOOL_RATE_LOCKING);
-    boolConfigUpdate(HW_BOOL_RATE_RESET);
+    on_event_masterVolumeChanged(DAC_VOLUME_NAME, 0);
+    on_event_masterVolumeChanged(DAC_VOLUME_NAME, 1);
+
+    on_event_mixerRouteChanged(ANALOG_PLAYBACK_ROUTE_NAME, 0);
+    on_event_mixerRouteChanged(ANALOG_PLAYBACK_ROUTE_NAME, 1);
+
+    on_event_mixerRouteChanged(SPDIF_PLAYBACK_ROUTE_NAME, 0);
+    on_event_mixerRouteChanged(SPDIF_PLAYBACK_ROUTE_NAME, 1);
+
+    on_event_enumConfigChanged(HW_ENUM_INTERNAL_CLOCK, 0);
+    on_event_enumConfigChanged(HW_ENUM_CLOCK_DEFAULT, 0);
+    on_event_enumConfigChanged(HW_ENUM_DEEMPHASIS, 0);
+    on_event_boolConfigChanged(HW_BOOL_RATE_LOCKING, 0);
+    on_event_boolConfigChanged(HW_BOOL_RATE_RESET, 0);
 
     kDebug() << "leaving";
 }
 
 
+
+
+// ---------------------------------------------------------------------------
+// Event Interface
+// ---------------------------------------------------------------------------
 
 
 
 void EnvyCard::driverEvent(int) {
     snd_ctl_event_t *ev;
     snd_ctl_event_alloca(&ev);
-    if (snd_ctl_read(ctl, ev) < 0)
+    if (snd_ctl_read(mCard, ev) < 0)
         return;
-    
-    const char* name = snd_ctl_event_elem_get_name(ev);
+
+    const QString& name = snd_ctl_event_elem_get_name(ev);
     int index = snd_ctl_event_elem_get_index(ev);
 
     kDebug() << "driverEvent: " << name << "(" << index << ")";
 
     unsigned int mask = snd_ctl_event_elem_get_mask(ev);
-    if (! (mask & (SND_CTL_EVENT_MASK_VALUE | SND_CTL_EVENT_MASK_INFO)))
+    if (!(mask & (SND_CTL_EVENT_MASK_VALUE | SND_CTL_EVENT_MASK_INFO)))
         return;
-    
+
     kDebug() << "driverEvent: " << name << "(" << index << ")";
 
     switch (snd_ctl_event_elem_get_interface(ev)) {
-        case SND_CTL_ELEM_IFACE_MIXER:
-            if (!strcmp(name, "Multi Playback Volume"))
-                mixerUpdatePlaybackVolume(index);
-            else if (!strcmp(name, "H/W Multi Capture Volume"))
-                mixerUpdateInputVolume(index);
-            else if (!strcmp(name, "IEC958 Multi Capture Volume"))
-                mixerUpdateSPDIFVolume(index);
-            
-            else if (!strcmp(name, "Multi Playback Switch"))
-                mixerUpdatePlaybackSwitch(index);
-            else if (!strcmp(name, "H/W Multi Capture Switch"))
-                mixerUpdateInputSwitch(index);
-            else if (!strcmp(name, "IEC958 Multi Capture Switch"))
-                mixerUpdateSPDIFSwitch(index);
-            
-            else if (!strcmp(name, "H/W Playback Route"))
-                patchbayAnalogUpdate(index);
-            else if (!strcmp(name, "IEC958 Playback Route"))
-                patchbayDigitalUpdate(index);
-            else if (!strcmp(name, "DAC Volume"))
-                dacVolumeUpdate(index);
-            else if (!strcmp(name, HW_ENUM_INTERNAL_CLOCK))
-                enumConfigUpdate(name);
-            else if (!strcmp(name, HW_ENUM_CLOCK_DEFAULT))
-                enumConfigUpdate(name);
-            else if (!strcmp(name, HW_ENUM_DEEMPHASIS))
-                enumConfigUpdate(name);
-            else if (!strcmp(name, HW_BOOL_RATE_LOCKING))
-                boolConfigUpdate(name);
-            else if (!strcmp(name, HW_BOOL_RATE_RESET))
-                boolConfigUpdate(name);
-            // TODO: implement these cases
-/*            else if (!strcmp(name, "Multi Track Volume Rate"))
-            volumeChangeRateUpdate(); */
-         
-
-            break;
-        default:
-            break;
+    case SND_CTL_ELEM_IFACE_MIXER: {
+        if (!mHandlers.contains(name)) {
+            kWarning() << name << "is not a supported event";
+            return;
+        }
+        EventHandler handler = mHandlers[name];
+        (this->*handler)(name, index);
+        break;
+    }
+    default: {} // noop
     }
 }
 
-void EnvyCard::mixerUpdatePlaybackVolume(int index){
+
+
+
+void EnvyCard::on_event_mixerVolumeChanged(const QString& section, int index) {
     kDebug() << "entering";
-    SndCtlElemValue vols(SND_CTL_ELEM_IFACE_MIXER, getSectionName(SECTION_PLAYBACK));
-    snd_ctl_elem_value_set_index(&vols, index);
-    readSndCtl(vols);
-    int left = snd_ctl_elem_value_get_integer(&vols, 0);
-    int right = snd_ctl_elem_value_get_integer(&vols, 1);
-    MixerAdjustement adj = deduceMixerAdjustement((LeftRight)(index%2), left, right);
-    emit mixerUpdatePlaybackVolume(index/2, (LeftRight)(index%2), adj);
+    LeftRight k = (LeftRight) (index % 2);
+    ControlElement vols(SND_CTL_ELEM_IFACE_MIXER, section, index);
+    if (vols.read(mCard) < 0) return;
+    ChannelState state = StereoLevels(vols.get(0), vols.get(1)).state(k);
+    emit mixerVolumeChanged(Address(section, index), k, state);
     kDebug() << "leaving";
 }
 
-void EnvyCard::mixerUpdateInputVolume(int index){
-    SndCtlElemValue vols(SND_CTL_ELEM_IFACE_MIXER, getSectionName(SECTION_CAPTURE));
-    snd_ctl_elem_value_set_index(&vols, index);
-    readSndCtl(vols);
-    int left = snd_ctl_elem_value_get_integer(&vols, 0);
-    int right = snd_ctl_elem_value_get_integer(&vols, 1);
-    MixerAdjustement adj = deduceMixerAdjustement((LeftRight)(index%2), left, right);
-    emit mixerUpdateAnalogInVolume(index/2, (LeftRight)(index%2), adj);
+
+
+void EnvyCard::on_event_mixerMuteSwitchChanged(const QString& section, int index) {
+    ControlElement sw(SND_CTL_ELEM_IFACE_MIXER, section, index);
+    if (sw.read(mCard) < 0) return;
+    bool left = snd_ctl_elem_value_get_boolean(&sw, 0);
+    bool right = snd_ctl_elem_value_get_boolean(&sw, 1);
+    if (left != right)
+        kWarning() << "Mute switches for channel " << index << " do not match. Displaying state of left channel only";
+    emit mixerMuteSwitchChanged(Address(section, index), (LeftRight)(index % 2), !left);
 }
 
-void EnvyCard::mixerUpdateSPDIFVolume(int index){
-    SndCtlElemValue vols(SND_CTL_ELEM_IFACE_MIXER, getSectionName(SECTION_IEC598));
-    snd_ctl_elem_value_set_index(&vols, index);
-    readSndCtl(vols);
-    int left = snd_ctl_elem_value_get_integer(&vols, 0);
-    int right = snd_ctl_elem_value_get_integer(&vols, 1);
-    MixerAdjustement adj = deduceMixerAdjustement((LeftRight)(index%2), left, right);
-    emit mixerUpdateSPDIFVolume(index/2, (LeftRight)(index%2), adj);
+void EnvyCard::on_event_mixerRouteChanged(const QString& section, int index) {
+    ControlElement val(SND_CTL_ELEM_IFACE_MIXER, section, index);
+    if (val.read(mCard) < 0) return;
+
+    int routeIdx = snd_ctl_elem_value_get_enumerated(&val, 0);
+    kDebug() << "new route: " << mRoutes[routeIdx];
+    emit mixerRouteChanged(Address(section, index), (LeftRight)(index % 2), mRoutes[routeIdx]);
 }
 
-void EnvyCard::dacVolumeUpdate(int index)
+
+void EnvyCard::on_event_masterVolumeChanged(const QString& section, int index)
 {
-    SndCtlElemValue vols( SND_CTL_ELEM_IFACE_MIXER,  "DAC Volume" );
-    snd_ctl_elem_value_set_index( &vols, index );
-    readSndCtl( vols );
-    int vol = snd_ctl_elem_value_get_integer( &vols, 0 );
-    emit analogUpdateDACVolume((LeftRight)(index), vol);
-}
-
-void EnvyCard::mixerUpdatePlaybackSwitch(int index){
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, MULTI_PLAYBACK_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index);
-    if (snd_ctl_elem_read(ctl, &sw) >= 0) {
-        bool left = snd_ctl_elem_value_get_boolean(&sw, 0);
-        bool right = snd_ctl_elem_value_get_boolean(&sw, 1);
-        if (left != right)
-            kWarning() << "Mute switches for channel " << index
-                     << " do not match. Displaying state of left channel only";
-        emit mixerUpdatePCMMuteSwitch(index /2, (LeftRight)(index %2), !left);
-    }
-}
-
-void EnvyCard::mixerUpdateInputSwitch(int index) {
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, HW_MULTI_CAPTURE_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index);
-    if (snd_ctl_elem_read(ctl, &sw) >= 0) {
-        bool leftOn = snd_ctl_elem_value_get_boolean(&sw, 0);
-        bool rightOn = snd_ctl_elem_value_get_boolean(&sw, 1);
-        if (leftOn != rightOn)
-            kWarning() << "Mute switches for channel " << index
-                     << " do not match. Displaying state of left channel only";
-        emit mixerUpdateAnalogInMuteSwitch(index /2, (LeftRight)(index %2), !leftOn);
-    }
-}
-
-void EnvyCard::mixerUpdateSPDIFSwitch(int index){
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, IEC958_MULTI_CAPTURE_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index);
-    if (snd_ctl_elem_read(ctl, &sw) >= 0) {
-        bool left = snd_ctl_elem_value_get_boolean(&sw, 0);
-        bool right = snd_ctl_elem_value_get_boolean(&sw, 1);
-        if (left != right)
-            kWarning() << "Mute switches for channel " << index
-                     << " do not match. Displaying state of left channel only";
-        emit mixerUpdateSPDIFInMuteSwitch(index / 2, (LeftRight)(index % 2), !left);
-    }
+    ControlElement vols(SND_CTL_ELEM_IFACE_MIXER, section, index);
+    if (vols.read(mCard) < 0) return;
+    emit masterVolumeChanged((LeftRight)(index % 2), vols.get(0));
 }
 
 
-
-void EnvyCard::patchbayAnalogUpdate(int index) {
-    SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, ANALOG_PLAYBACK_ROUTE_NAME);
-    snd_ctl_elem_value_set_index(&val, index);
-    int err = snd_ctl_elem_read(ctl, &val);
-    if (err < 0) {
-        kWarning() << "cannot update analog route: " << snd_strerror(err);
-        return;
-    }
-
-    int routeIdx = snd_ctl_elem_value_get_enumerated(&val, 0);
-    kDebug() << "new route: " << mRoutes[routeIdx];
-    emit analogRouteUpdated(index / 2, (LeftRight)(index % 2), mRoutes[routeIdx]);
-}
-
-void EnvyCard::patchbayDigitalUpdate(int index) {
-    SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, SPDIF_PLAYBACK_ROUTE_NAME);
-    snd_ctl_elem_value_set_index(&val, index);
-    int err = snd_ctl_elem_read(ctl, &val);
-    if (err < 0) {
-        kWarning() << "cannot update digital route: " << snd_strerror(err);
-        return;
-    }
-
-    int routeIdx = snd_ctl_elem_value_get_enumerated(&val, 0);
-    kDebug() << "new route: " << mRoutes[routeIdx];
-    emit digitalRouteUpdated(index / 2, (LeftRight)(index % 2), mRoutes[routeIdx]);
-}
-
-void EnvyCard::enumConfigUpdate(const char* var) {
-    SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, var);
-    snd_ctl_elem_value_set_index(&cfg, 0);
-    int err = snd_ctl_elem_read(ctl, &cfg);
-    if (err < 0) {
-        kWarning() << "cannot configure " << var << " :" << snd_strerror(err);
-        return;
-    }
+void EnvyCard::on_event_enumConfigChanged(const QString& var, int index) {
+    ControlElement cfg(SND_CTL_ELEM_IFACE_MIXER, var, index);
+    if (cfg.read(mCard) < 0) return;
 
     int idx = snd_ctl_elem_value_get_enumerated(&cfg, 0);
-    QString key(var);
-    const QStringList& enums = mConfigEnums[key];
-    kDebug() << key << " = " << enums[idx];
-    emit enumConfigUpdated(key, enums[idx]);
+    const QStringList& enums = mConfigEnums[var];
+    kDebug() << var << " = " << enums[idx];
+    emit enumConfigChanged(var, enums[idx]);
 }
 
-void EnvyCard::boolConfigUpdate(const char* var) {
-    SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, var);
-    snd_ctl_elem_value_set_index(&cfg, 0);
-    int err = snd_ctl_elem_read(ctl, &cfg);
-    if (err < 0) {
-        kWarning() << "cannot configure " << var << " :" << snd_strerror(err);
-        return;
-    }
+void EnvyCard::on_event_boolConfigChanged(const QString& var, int index) {
+    ControlElement cfg(SND_CTL_ELEM_IFACE_MIXER, var, index);
+    if (cfg.read(mCard) < 0) return;
 
     bool bvalue = snd_ctl_elem_value_get_boolean(&cfg, 0);
-    QString qvar(var);
-    kDebug() << qvar << " = " << bvalue;
-    emit boolConfigUpdated(qvar, bvalue);
+    kDebug() << var << " = " << bvalue;
+    emit boolConfigChanged(var, bvalue);
 }
 
-void EnvyCard::mixerMuteCaptureChannel(int index, LeftRight channel, bool muteOn) {
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, HW_MULTI_CAPTURE_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index *2 + (int)channel);
+// ---------------------------------------------------------------------------
+// Service Interface
+// ---------------------------------------------------------------------------
+
+void EnvyCard::on_slot_mixerVolumeChanged(int source, LeftRight channel, const ChannelState& levels) {
+
+    int left = (channel == LEFT ? levels.volume : levels.stereo);
+    int right = (channel == LEFT ? levels.stereo : levels.volume);
+
+    const QString& section = Section(source);
+    int index = Index(source, channel);
+    ControlElement vol(SND_CTL_ELEM_IFACE_MIXER, section, index);
+    vol.set(0, left);
+    vol.set(1, right);
+    vol.write(mCard);
+}
+
+
+void EnvyCard::on_slot_mixerMuteSwitchChanged(int source, LeftRight channel, bool muteOn) {
+    const QString& section = MuteSwitchSection(source);
+    int index = Index(source, channel);
+    ControlElement sw(SND_CTL_ELEM_IFACE_MIXER, section, index);
     snd_ctl_elem_value_set_boolean(&sw, 0, !muteOn);
     snd_ctl_elem_value_set_boolean(&sw, 1, !muteOn);
-    writeSndCtl(sw);
+    sw.write(mCard);
 }
 
-void EnvyCard::mixerMutePlaybackChannel(int index, LeftRight channel, bool muteOn) {
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, MULTI_PLAYBACK_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index *2 + (int)channel);
-    snd_ctl_elem_value_set_boolean(&sw, 0, !muteOn);
-    snd_ctl_elem_value_set_boolean(&sw, 1, !muteOn);
-    writeSndCtl(sw);
-}
 
-void EnvyCard::mixerMuteSPDIFChannel(int index, LeftRight channel, bool muteOn) {
-    SndCtlElemValue sw(SND_CTL_ELEM_IFACE_MIXER, IEC958_MULTI_CAPTURE_SWITCH);
-    snd_ctl_elem_value_set_index(&sw, index *2 + (int)channel);
-    snd_ctl_elem_value_set_boolean(&sw, 0, !muteOn);
-    snd_ctl_elem_value_set_boolean(&sw, 1, !muteOn);
-    writeSndCtl(sw);
-}
-
-void EnvyCard::writeSndCtl(const SndCtlElemValue& val) {
-    int err = snd_ctl_elem_write(ctl, &val);
-    if (err <0) 
-        qWarning("Unable to write value: %s", snd_strerror(err));
-}
-
-void EnvyCard::readSndCtl(const SndCtlElemValue& val) {
-    kDebug() << "entering";
-    int err = snd_ctl_elem_read(ctl, &val);
-    if (err < 0) kWarning() << "Unable to read value: " << snd_strerror(err);
-    kDebug() << "leaving";
-}
-
-void EnvyCard::setMixerCaptureVolume(int index, LeftRight channel, int vol, int stereo) {
-    setVolume(SECTION_CAPTURE, index, channel, vol, stereo);
-}
-
-void EnvyCard::setMixerPlaybackVolume(int index, LeftRight channel, int vol, int stereo) {
-    setVolume(SECTION_PLAYBACK, index, channel, vol, stereo);
-}
-
-void EnvyCard::setMixerSPDIFVolume(int index, LeftRight channel, int vol, int stereo) {
-    setVolume(SECTION_IEC598, index, channel, vol, stereo);
-}
-
-void EnvyCard::setDACVolume(LeftRight leftRight, int level) {
-    SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, "DAC Volume", (int)leftRight);
-    val.setInteger(level);
-    writeSndCtl(val);
-}
-
-void EnvyCard::setAnalogRoute(int index, LeftRight channel, const QString& soundSource) {
-    SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, ANALOG_PLAYBACK_ROUTE_NAME);
-    snd_ctl_elem_value_set_index(&val, 2 * index + channel);
-
+void EnvyCard::on_slot_mixerRouteChanged(int sink, LeftRight channel, const QString& soundSource) {
+    const QString& section = Section(sink);
+    int index = Index(sink, channel);
+    ControlElement val(SND_CTL_ELEM_IFACE_MIXER, section, index);
     kDebug() << "new route: " << soundSource;
     snd_ctl_elem_value_set_enumerated(&val, 0, mRoutes.indexOf(soundSource));
-    writeSndCtl(val);
+    val.write(mCard);
 }
 
-void EnvyCard::setDigitalRoute(int index, LeftRight channel, const QString& soundSource) {
-    SndCtlElemValue val(SND_CTL_ELEM_IFACE_MIXER, SPDIF_PLAYBACK_ROUTE_NAME);
-    snd_ctl_elem_value_set_index(&val, 2 * index + channel);
 
-    kDebug() << "new route: " << soundSource;
-    snd_ctl_elem_value_set_enumerated(&val, 0, mRoutes.indexOf(soundSource));
-    writeSndCtl(val);
+void EnvyCard::on_slot_masterVolumeChanged(LeftRight k, int level) {
+    ControlElement val(SND_CTL_ELEM_IFACE_MIXER, DAC_VOLUME_NAME, (int)k);
+    val.set(0, level);
+    val.write(mCard);
 }
 
-void EnvyCard::setEnumConfig(const QString& key, const QString& value) {
+void EnvyCard::on_slot_boolConfigChanged(const QString& key, bool value) {
     kDebug() << key << " = " << value;
-    SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, key.toAscii());
-    snd_ctl_elem_value_set_index(&cfg, 0);
-    snd_ctl_elem_value_set_enumerated(&cfg, 0, mConfigEnums[key].indexOf(value));
-    writeSndCtl(cfg);
-}
-
-void EnvyCard::setBoolConfig(const QString& key, bool value) {
-    kDebug() << key << " = " << value;
-    SndCtlElemValue cfg(SND_CTL_ELEM_IFACE_MIXER, key.toAscii());
-    snd_ctl_elem_value_set_index(&cfg, 0);
+    ControlElement cfg(SND_CTL_ELEM_IFACE_MIXER, key, 0);
     snd_ctl_elem_value_set_boolean(&cfg, 0, value);
-    writeSndCtl(cfg);
+    cfg.write(mCard);
+}
+
+void EnvyCard::on_slot_enumConfigChanged(const QString& key, const QString& value) {
+    kDebug() << key << " = " << value;
+    ControlElement cfg(SND_CTL_ELEM_IFACE_MIXER, key, 0);
+    snd_ctl_elem_value_set_enumerated(&cfg, 0, mConfigEnums[key].indexOf(value));
+    cfg.write(mCard);
+}
+
+int EnvyCard::Address(const QString& section, int index) const {
+    return mAddressBase[section] + 2 * (index / 2);
+}
+
+QString EnvyCard::Section(int address) {
+    if (address < 10) return mSectionBase[0];
+    if (address < 12) return mSectionBase[10];
+    if (address < 20) return mSectionBase[12];
+    if (address < 30) return mSectionBase[20];
+    if (address < 32) return mSectionBase[30];
+    return mSectionBase[32];
+}
+
+QString EnvyCard::MuteSwitchSection(int address) {
+    if (address < 10) return mMuteSwitchSectionBase[0];
+    if (address < 12) return mMuteSwitchSectionBase[10];
+    return mMuteSwitchSectionBase[12];
 }
 
 
-
-void EnvyCard::setVolume(Section section, int index, LeftRight channel, int vol, int stereo)
-{
-    int volLeft = (channel == LEFT ? vol : stereo);
-    int volRight = (channel == LEFT ? stereo : vol);
-
-    SndCtlElemValue volume( SND_CTL_ELEM_IFACE_MIXER, getSectionName( section ) );
-    snd_ctl_elem_value_set_index( &volume, index * 2 + (int)channel );
-    readSndCtl( volume );
-    int curVolLeft = snd_ctl_elem_value_get_integer( &volume, 0 );
-    int curVolRight = snd_ctl_elem_value_get_integer( &volume, 1 );
-    if ( (curVolLeft != volLeft) || (curVolRight != volRight) )
-    {
-        snd_ctl_elem_value_set_integer( &volume, 0, volLeft );
-        snd_ctl_elem_value_set_integer( &volume, 1, volRight );
-        writeSndCtl( volume );
-    }
-}
-
-
-const char* EnvyCard::getSectionName(Section section) {
-    const char* elemName = 0;
-    switch (section) {
-        case SECTION_CAPTURE:
-            elemName = HW_MULTI_CAPTURE_VOLUME;
-            break;
-        case SECTION_PLAYBACK:
-            elemName = MULTI_PLAYBACK_VOLUME;
-            break;
-        case SECTION_IEC598:
-            elemName = IEC958_MULTI_CAPTURE_VOLUME;
-            break;
-        default:
-            assert(0);
-    }
-    return elemName;
-}
-
-MixerAdjustement EnvyCard::getMixerAdjustement(Section sect, int index, LeftRight channel) {
-    SndCtlElemValue volume(SND_CTL_ELEM_IFACE_MIXER, getSectionName(sect));
-    snd_ctl_elem_value_set_index(&volume, index * 2 + (int)channel);
-    readSndCtl(volume);
-   
-    int curLeftVol = snd_ctl_elem_value_get_integer(&volume, 0);
-    int curRightVol = snd_ctl_elem_value_get_integer(&volume, 1);
-    return deduceMixerAdjustement(channel, curLeftVol, curRightVol);
-}
-
-MixerAdjustement EnvyCard::deduceMixerAdjustement(LeftRight ch, int aleft, int aright) {
-    MixerAdjustement result;
-    
-    if (ch == LEFT) {
-        result.volume = aleft;
-        result.stereo = aright;
-    } else {
-        result.volume = aright;
-        result.stereo = aleft;
-    }
-
-    return result;
+int EnvyCard::Index(int address, LeftRight channel) const {
+    if (address < 10) return address + (int) channel;
+    if (address < 12) return address - 10 + (int) channel;
+    if (address < 20) return address - 12 + (int) channel;
+    if (address < 30) return address - 20 + (int) channel;
+    if (address < 32) return address - 30 + (int) channel;
+    return address - 32 + (int) channel;
 }
 
 

@@ -41,33 +41,23 @@
 #define HW_BOOL_RATE_LOCKING "Multi Track Rate Locking"
 #define HW_BOOL_RATE_RESET "Multi Track Rate Reset"
 
-/**
- * Number of stereo outputs
- * NOTE : be warned that, for some reasons, alsa tool envy24control counts each
- * pcm output independently
- */
-
-#define MAX_PCM_OUTPUTS   5
 
 /**
  * NOTE: a channel has two, left and right, streams
  */
-#define MAX_SPDIF_CHANNELS  1
+
 
 /**
- * number of *stereo* input channels
+ * number of PCM output channels
  */
-#define MAX_INPUT_CHANNELS  4
-
-/**
- * number of *stereo* output channels
- */
-#define MAX_OUTPUT_CHANNELS 4
+#define MAX_PCM_CHANNELS 4
 
 /**
  * number of *stereo* output SPDIF channels
  */
 #define MAX_SPDIF_CHANNELS	1
+
+#define MAX_MULTI_CHANNELS 5 // MAX_PCM_CHANNELS + MAX_SPDIF_CHANNELS
 
 /**
  * Structure used by level monitors
@@ -85,17 +75,20 @@ enum LeftRight {
 /**
  * Structure used to adjust mixer levels
  */
-struct MixerAdjustement {
+struct ChannelState {
     int volume;
     int stereo;
+
+    ChannelState(LeftRight k, int left, int right) {
+        if (k == LEFT) {
+            volume = left;
+            stereo = right;
+        } else {
+            volume = right;
+            stereo = left;
+        }
+    }
 };
 
-/**
- * Envy cards handle two kinds of routes
- */
-enum RouteKind  { 
-    ANALOG, 
-    SPDIF 
-};
 
 #endif // _ENVY_STRUCTS_H_

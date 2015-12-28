@@ -20,12 +20,11 @@
 #ifndef _MIXERINPUT_H_INCLUDED_
 #define _MIXERINPUT_H_INCLUDED_
 
-#include "envystructs.h"
+#include "envycard.h"
 #include <QWidget>
 #include <ksharedconfig.h>
 
 class KConfig;
-class EnvyCard;
 
 namespace Ui {
 class MixerInput;
@@ -35,7 +34,7 @@ class MixerInput : public QWidget {
     Q_OBJECT
 
 private:
-    int mIndex;
+    int mAddress;
     bool inSlotFlag;
     bool inEventFlag;
 
@@ -55,13 +54,14 @@ private:
 
 public:
 
+    typedef QMap<int, QWidget*> Routing;
 
     MixerInput(QWidget* parent);
     ~MixerInput();
 
-    void setup(int index, const QString& name, const QString& title);
-    void connectToCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
-    void connectFromCard(EnvyCard* envyCard, const QString& inout = QString("playback"));
+    void setup(int index, const QString& name, const QString& title, Routing& routing);
+    void connectToCard(EnvyCard* envyCard);
+    void connectFromCard(EnvyCard* envyCard);
         
     void saveToConfig(KConfigBase*);
     void loadFromConfig(KConfigBase*);
@@ -71,7 +71,7 @@ public:
 public slots:
 
     void mixerUpdateMuteSwitch(int, LeftRight, bool);
-    void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
+    void mixerUpdatePlaybackVolume(int index, LeftRight channel, const ChannelState&);
 
     void on_leftVolume_valueChanged(int);
     void on_leftStereo_valueChanged(int);
@@ -90,7 +90,7 @@ public slots:
 signals:
 
     void muted(int index, LeftRight channel, bool m);
-    void adjusted(int index, LeftRight channel, int volume, int stereo);
+    void adjusted(int index, LeftRight channel, const ChannelState&);
     void notifyRightMute(bool);
     void notifyLeftMute(bool);
     void notifyRightVolume(int);

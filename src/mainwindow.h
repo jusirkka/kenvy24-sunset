@@ -24,13 +24,14 @@
 #include <kmainwindow.h>
 #include <ksharedconfig.h>
 
+#include "envycard.h"
+
 class QButtonGroup;
 class QCheckBox;
 class QListWidgetItem;
 class DBusIface;
 class QTimer;
 class KStatusNotifierItem;
-class EnvyCard;
 
 namespace Ui {
 class MainWindow;
@@ -133,6 +134,7 @@ private:
     QTimer* mTimer;
     int mUpdateInterval;
     EnvyCard* mCard;
+    QMap<int, QWidget*> mRouting;
 };
 
 

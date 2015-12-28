@@ -26,9 +26,77 @@
 #include <alsa/asoundlib.h>
 #include <QStringList>
 #include <QList>
+#include <QMap>
 #include <QHash>
 #include <QVector>
-#include "envystructs.h"
+
+
+/**
+ * Router sources: these are routed to either digital L/R out or analog L/R out
+ */
+#define R_SRC_PCM "PCM Out"
+#define R_SRC_ANALOG "H/W In 0"
+#define R_SRC_DIGITAL_L "IEC958 In L"
+#define R_SRC_DIGITAL_R "IEC958 In R"
+#define R_SRC_MIXER "Digital Mixer"
+
+
+/**
+ * HW settings items
+ */
+
+#define HW_ENUM_INTERNAL_CLOCK "Multi Track Internal Clock"
+#define HW_ENUM_CLOCK_DEFAULT "Multi Track Internal Clock Default"
+#define HW_ENUM_DEEMPHASIS "Deemphasis"
+#define HW_BOOL_RATE_LOCKING "Multi Track Rate Locking"
+#define HW_BOOL_RATE_RESET "Multi Track Rate Reset"
+
+
+/**
+ * number of PCM output channels
+ */
+#define MAX_PCM_CHANNELS 4
+
+/**
+ * number of *stereo* output SPDIF channels
+ */
+#define MAX_SPDIF_CHANNELS	1
+
+#define MAX_MULTI_CHANNELS 5 // MAX_PCM_CHANNELS + MAX_SPDIF_CHANNELS
+
+/**
+ * Structure used by level monitors
+ */
+
+enum LeftRight {
+    LEFT = 0,
+    RIGHT = 1
+};
+
+class ChannelState;
+
+struct StereoLevels {
+  int left, right;
+  StereoLevels(int l=0, int r=0): left(l), right(r) {}
+
+  ChannelState state(LeftRight k) const;
+
+};
+
+
+/**
+ * Structure used to adjust mixer levels
+ */
+struct ChannelState {
+    int volume, stereo;
+
+    ChannelState(int v=0, int s=0): volume(v), stereo(s) {}
+
+    StereoLevels levels(LeftRight k) const;
+};
+
+
+class CardNotFound {}; // Exception
 
 class QSocketNotifier;
 
@@ -36,86 +104,59 @@ class EnvyCard : public QObject {
     Q_OBJECT
 public:
 
-    typedef QVector<StereoLevels> PeakList;
+    typedef QMap<int, StereoLevels> PeakMap;
     typedef QVector<int> IndexList;
+    typedef void (EnvyCard::*(EventHandler))(const QString&, int);
 
 private:
 
-    typedef struct {
-        unsigned int subvendor; /* PCI[2c-2f] */
-        unsigned char size; /* size of EEPROM image in bytes */
-        unsigned char version;  /* must be 1 */
-        unsigned char codec;    /* codec configuration PCI[60] */
-        unsigned char aclink;   /* ACLink configuration PCI[61] */
-        unsigned char i2sID;    /* PCI[62] */
-        unsigned char spdif;    /* S/PDIF configuration PCI[63] */
-        unsigned char gpiomask; /* GPIO initial mask, 0 = write, 1 = don't */
-        unsigned char gpiostate; /* GPIO initial state */
-        unsigned char gpiodir;  /* GPIO direction state */
-        unsigned short ac97main;
-        unsigned short ac97pcm;
-        unsigned short ac97rec;
-        unsigned char ac97recsrc;
-        unsigned char dacID[4]; /* I2S IDs for DACs */
-        unsigned char adcID[4]; /* I2S IDs for ADCs */
-        unsigned char extra[4];
-    } ice1712_eeprom_t;
-
-    static EnvyCard* instance;
-    snd_ctl_t *ctl;
-    int cardNumber;
-    QString cardName;
-    ice1712_eeprom_t card_eeprom;
-    snd_ctl_elem_value_t *peaks;
-    bool outputActive[MAX_OUTPUT_CHANNELS];
-    int outChannels;
-    bool outputSPDIFActive[ MAX_SPDIF_CHANNELS ];
-    int spdifChannels;
-    QList<QSocketNotifier*> eventNotifiers;
-    PeakList mPeaks;
+    snd_ctl_t *mCard;
+    QList<QSocketNotifier*> mEventNotifiers;
+    PeakMap mPeaks;
     QStringList mRoutes;
     QHash<QString, QStringList> mConfigEnums;
+    QHash<QString, EventHandler> mHandlers;
 
-    class SndCtlElemValue {
+    QMap<QString, int> mAddressBase;
+    QMap<int, QString> mSectionBase;
+    QMap<int, QString> mMuteSwitchSectionBase;
+
+    class ControlElement {
+
     public:
-        snd_ctl_elem_value_t *val;
+        snd_ctl_elem_value_t *element;
 
-        SndCtlElemValue(_snd_ctl_elem_iface, const char* name);
-        SndCtlElemValue(_snd_ctl_elem_iface, const char* name,  int index);
-        ~SndCtlElemValue();
+        ControlElement(_snd_ctl_elem_iface, const QString& name);
+        ControlElement(_snd_ctl_elem_iface, const QString& name,  int index);
+        ~ControlElement();
 
         snd_ctl_elem_value_t* operator & () const {
-            return val;
+            return element;
         }
-        int getInteger(int index =0) const {
-            return snd_ctl_elem_value_get_integer(val, index);
-        }
-        void setInteger(int intVal) const {
-            snd_ctl_elem_value_set_integer(val, 0, intVal);
-        }
-        // TODO: map the other snd_ctl_elem_XXX  ALSA calls here, then update code to call them
+        int get(int index=0) const;
+        void set(int index, int v) const;
+        int write(snd_ctl_t* card) const;
+        int read(snd_ctl_t* card) const;
     };
+
+    ControlElement mRawPeaks;
+
+    EnvyCard();
+    EnvyCard(const EnvyCard&); // not implemented
+    void operator=(EnvyCard const&); // not implemented
 
 public:
 
-    EnvyCard();
     ~EnvyCard();
 
-    static EnvyCard* getInstance();
+    static EnvyCard& Instance();
 
-    bool foundEnvyCard() const {
-        return !cardName.isEmpty();
-    }
-
-    const QString& getCardName() const {
-        return cardName;
-    }
-
+    void configAddresses(const IndexList&);
 
     /**
      * This method reads current peak levels from the sound card.
      */
-    const PeakList& getPeaks(const IndexList&);
+    const PeakMap& peaks();
 
     /**
      * Emit current state of the card
@@ -123,64 +164,50 @@ public:
 
     void pulse();
 
-    // driver events start
-    void mixerUpdatePlaybackVolume(int);
-    void mixerUpdateInputVolume(int);
-    void mixerUpdateSPDIFVolume(int);
-    void mixerUpdatePlaybackSwitch(int);
-    void mixerUpdateInputSwitch(int);
-    void mixerUpdateSPDIFSwitch(int);
-    void patchbayAnalogUpdate(int);
-    void patchbayDigitalUpdate(int);
-    void dacVolumeUpdate(int);
-    void enumConfigUpdate(const char*);
-    void boolConfigUpdate(const char*);
-    // driver events end
+    // addresses
+    int PCMAddress(int index) const;
+    int AnalogInAddress() const;
+    int DigitalInAddress() const;
+    int AnalogOutAddress() const;
+    int DigitalOutAddress() const;
+    int DACAddress() const;
+
+
 
 signals:
-    void mixerUpdatePCMMuteSwitch(int index, LeftRight channel, bool on);
-    void mixerUpdateAnalogInMuteSwitch(int index, LeftRight channel, bool on);
-    void mixerUpdateSPDIFInMuteSwitch(int index, LeftRight channel, bool on);
-    void mixerUpdatePlaybackVolume(int index, LeftRight channel, MixerAdjustement);
-    void mixerUpdateAnalogInVolume(int index, LeftRight channel, MixerAdjustement);
-    void mixerUpdateSPDIFVolume(int index, LeftRight channel, MixerAdjustement);
-    void analogUpdateDACVolume(LeftRight channel, int);
-    void digitalRouteUpdated(int, LeftRight, const QString&);
-    void analogRouteUpdated(int, LeftRight, const QString&);
-    void boolConfigUpdated(const QString&, bool);
-    void enumConfigUpdated(const QString&, const QString&);
+    void mixerVolumeChanged(int source, LeftRight channel, const ChannelState&);
+    void mixerMuteSwitchChanged(int source, LeftRight channel, bool on);
+    void mixerRouteChanged(int sink, LeftRight, const QString&);
+    void masterVolumeChanged(LeftRight channel, int);
+    void boolConfigChanged(const QString&, bool);
+    void enumConfigChanged(const QString&, const QString&);
 
 protected slots:
     void driverEvent(int);
-    void mixerMuteCaptureChannel(int, LeftRight, bool);
-    void mixerMutePlaybackChannel(int, LeftRight, bool);
-    void mixerMuteSPDIFChannel(int, LeftRight, bool);
-    void setMixerCaptureVolume(int, LeftRight, int vol, int stereo);
-    void setMixerPlaybackVolume(int, LeftRight, int vol, int stereo);
-    void setMixerSPDIFVolume(int, LeftRight, int vol, int stereo);
-    void setDACVolume(LeftRight, int level);
-    void setDigitalRoute(int index, LeftRight channel, const QString& soundSource);
-    void setAnalogRoute(int index, LeftRight channel, const QString& soundSource);
-    void setEnumConfig(const QString&, const QString&);
-    void setBoolConfig(const QString&, bool);
+
+    void on_slot_mixerVolumeChanged(int source, LeftRight, const ChannelState&);
+    void on_slot_mixerMuteSwitchChanged(int source, LeftRight, bool);
+    void on_slot_mixerRouteChanged(int sink, LeftRight channel, const QString&);
+    void on_slot_masterVolumeChanged(LeftRight, int level);
+    void on_slot_boolConfigChanged(const QString&, bool);
+    void on_slot_enumConfigChanged(const QString&, const QString&);
 
 private:
-    enum Section {
-        SECTION_PLAYBACK,
-        SECTION_CAPTURE,
-        SECTION_IEC598
-    };
 
-    bool findCard();
-    void initPatchbay();
-    void initEvents();
-    void initConfig();
-    void writeSndCtl(const SndCtlElemValue&);
-    void readSndCtl(const SndCtlElemValue&);
-    void setVolume(Section, int, LeftRight, int vol, int stereo);
-    MixerAdjustement getMixerAdjustement(Section, int index, LeftRight);
-    const char* getSectionName(Section);
-    MixerAdjustement deduceMixerAdjustement(LeftRight channel, int left, int right);
+    // driver event handlers
+    void on_event_mixerVolumeChanged(const QString&, int);
+    void on_event_mixerMuteSwitchChanged(const QString&, int);
+    void on_event_mixerRouteChanged(const QString&, int);
+    void on_event_masterVolumeChanged(const QString&, int);
+    void on_event_enumConfigChanged(const QString&, int);
+    void on_event_boolConfigChanged(const QString&, int);
+
+
+    int Address(const QString& section, int index) const;
+    QString Section(int address);
+    QString MuteSwitchSection(int address);
+    int Index(int address, LeftRight channel) const;
+
 };
 
 #endif // _ENVYCARD_H_

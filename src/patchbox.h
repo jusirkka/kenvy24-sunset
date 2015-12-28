@@ -20,12 +20,11 @@
 #ifndef _PATCHBOX_H_INCLUDED_
 #define _PATCHBOX_H_INCLUDED_
 
-#include "envystructs.h"
+#include "envycard.h"
 #include <QWidget>
 #include <QRadioButton>
 #include <ksharedconfig.h>
 
-class EnvyCard;
 class KConfig;
 class QButtonGroup;
 
@@ -53,7 +52,7 @@ private:
     };
 
     Ui::PatchBox* mUI;
-    int mIndex;
+    int mAddress;
     QHash<QString, int> mLSources;
     QHash<QString, int> mRSources;
     QButtonGroup* mLGroup;
@@ -63,10 +62,12 @@ public:
     PatchBox(QWidget* parent);
     ~PatchBox();
 
-    void setup(int index, const QString& name, const QString& title);
-    void connectToCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
-    void connectFromCard(EnvyCard* envyCard, const QString& outputType = QString("analog"));
-        
+    typedef QMap<int, QWidget*> Routing;
+
+    void setup(int address, const QString& name, const QString& title, Routing& routing);
+    void connectToCard(EnvyCard* envyCard);
+    void connectFromCard(EnvyCard* envyCard);
+
     void saveToConfig(KConfigBase*);
     void loadFromConfig(KConfigBase*);
 

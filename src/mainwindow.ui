@@ -33,7 +33,16 @@
     <property name="spacing">
      <number>0</number>
     </property>
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item>
@@ -84,7 +93,7 @@
          <widget class="QGroupBox" name="inputGroup">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>3</horstretch>
+            <horstretch>4</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
@@ -97,7 +106,23 @@
           <property name="title">
            <string>Mixer Inputs</string>
           </property>
-          <layout class="QHBoxLayout" name="_3">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="MixerInput" name="mixerPCM4" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>1</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>1</height>
+              </size>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="MixerInput" name="mixerPCM1" native="true">
              <property name="sizePolicy">
@@ -623,7 +648,7 @@
      <x>0</x>
      <y>0</y>
      <width>896</width>
-     <height>27</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -944,8 +969,8 @@
      <y>298</y>
     </hint>
     <hint type="destinationlabel">
-     <x>77</x>
-     <y>53</y>
+     <x>-1</x>
+     <y>-1</y>
     </hint>
    </hints>
   </connection>
