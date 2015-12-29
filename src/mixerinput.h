@@ -30,6 +30,8 @@ namespace Ui {
 class MixerInput;
 }
 
+class DBusIface;
+
 class MixerInput : public QWidget {
     Q_OBJECT
 
@@ -59,7 +61,7 @@ public:
     MixerInput(QWidget* parent);
     ~MixerInput();
 
-    void setup(int index, const QString& name, const QString& title, Routing& routing);
+    void setup(int index, const QString& name, const QString& title, Routing& routing, DBusIface* dbus);
     void connectToCard(EnvyCard* envyCard);
     void connectFromCard(EnvyCard* envyCard);
         
@@ -82,9 +84,8 @@ public slots:
     void on_checkMuteRight_toggled(bool);
     void on_checkLock_toggled(bool);
 
-    void dbus_VolumeUp();
-    void dbus_VolumeDown();
-    void dbus_VolumeMute();
+    void dbus_volumeIncrement(int address, int incr);
+    void dbus_volumeMute(int address);
 
 
 signals:

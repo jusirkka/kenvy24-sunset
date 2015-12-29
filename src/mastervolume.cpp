@@ -169,4 +169,24 @@ void MasterVolume::on_checkLock_toggled(bool locked) {
     kDebug()  << "leaving";
 }
 
+void MasterVolume::dbus_volumeIncrement(int incr) {
+
+    kDebug() << "entering";
+    // negative values
+    int lval = mUI->leftSlider->value() - incr;
+    int rval = mUI->rightSlider->value() - incr;
+
+    if (lval < 0 || rval < 0 || lval > 127 || rval > 127) {
+        return;
+    }
+
+    mUI->leftSlider->setValue(lval);
+
+    if (!mUI->checkLock->isChecked()) {
+        mUI->rightSlider->setValue(rval);
+    }
+    kDebug() << "leaving";
+}
+
+
 #include "mastervolume.moc"

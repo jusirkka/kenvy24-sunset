@@ -72,6 +72,8 @@ public slots:
     void on_rightSlider_valueChanged(int);
     void on_leftSlider_valueChanged(int);
 
+    void dbus_volumeIncrement(int incr);
+
 signals:
 
     void adjusted(LeftRight channel, int volume);

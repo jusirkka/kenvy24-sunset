@@ -40,30 +40,35 @@ public:
 
 signals:
     
-    void signalPCMVolumeUp();
-    void signalPCMVolumeDown();
-    void signalPCMVolumeMute();
-    void signalAnalogVolumeUp();
-    void signalAnalogVolumeDown();
-    void signalAnalogVolumeMute();
-    void signalDigitalVolumeUp();
-    void signalDigitalVolumeDown();
-    void signalDigitalVolumeMute();
+    void signalDACVolumeIncrement(int incr);
+    void signalMixerVolumeIncrement(int  address, int incr);
+    void signalMixerVolumeMute(int address);
 
 
 
 public slots:
 
-    void pcmVolumeUp();
-    void pcmVolumeDown();
-    void pcmVolumeMute();
-    void analogVolumeUp();
-    void analogVolumeDown();
-    void analogVolumeMute();
-    void digitalVolumeUp();
-    void digitalVolumeDown();
-    void digitalVolumeMute();
+    void pcmPlaybackVolumeUp();
+    void pcmPlaybackVolumeDown();
+    void pcmPlaybackMute();
 
+    void iec958PlaybackVolumeUp();
+    void iec958PlaybackVolumeDown();
+    void iec958PlaybackMute();
+
+    void analogInVolumeUp();
+    void analogInVolumeDown();
+    void analogInMute();
+
+    void digitalInVolumeUp();
+    void digitalInVolumeDown();
+    void digitalInMute();
+
+    void dacVolumeUp();
+    void dacVolumeDown();
+
+private:
+    int m_pcm, m_iec958, m_din, m_ain;
 };
 
 #endif // DBUSIFACE_H

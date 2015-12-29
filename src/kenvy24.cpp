@@ -20,9 +20,12 @@
  * Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include <kmessagebox.h>
+#include <kdebug.h>
+#include <QTimer>
+
 #include "kenvy24.h"
 #include "mainwindow.h"
-#include <kdebug.h>
 #include "dbusiface.h"
 
 KEnvy24App::KEnvy24App(bool docked): KUniqueApplication(), mEnvy(0), mDocked(docked) {}
@@ -33,9 +36,15 @@ KEnvy24App::~KEnvy24App() {}
 
 int KEnvy24App::newInstance() {
     if (mEnvy) return KUniqueApplication::newInstance();
-    mDBus = new DBusIface(this);
-    mEnvy = new MainWindow(mDBus, mDocked);
 
+    try {
+        mDBus = new DBusIface(this);
+        mEnvy = new MainWindow(mDBus, mDocked);
+    } catch (CardNotFound) {
+        KMessageBox::error(0, "Cannot find an Envy24 chip based sound card in your system. Will now quit!");
+        QTimer::singleShot(10, kapp, SLOT(quit()));
+        return 0;
+    }
 
     if (isSessionRestored() && KMainWindow::canBeRestored(1)) {
         mEnvy->restore(1, false);

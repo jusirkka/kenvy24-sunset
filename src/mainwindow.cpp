@@ -34,7 +34,6 @@
 #include <kconfiggroup.h>
 #include <kactioncollection.h>
 #include <QTimer>
-#include <kmessagebox.h>
 
 
 #define ENUM_RATE320 "32000"
@@ -64,13 +63,7 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUpdateInterval(20)
 {
 
-    try {
-        mCard = &EnvyCard::Instance();
-    } catch (CardNotFound) {
-        KMessageBox::error(this, "Cannot find an Envy24 chip based sound card in your system. Will now quit!");
-        QTimer::singleShot(10, kapp, SLOT(quit()));
-        return;
-    }
+    mCard = &EnvyCard::Instance();
 
 
     mUI->setupUi(this);
@@ -84,30 +77,18 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
 
 
 
-    mUI->mixerPCM4->setup(mCard->PCMAddress(4), "mixer-iec958-in", "IEC958 Playback", mRouting);
-    mUI->mixerPCM1->setup(mCard->PCMAddress(0), "mixer-pcm-in", "PCM Playback", mRouting);
-    mUI->mixerAnalogIn->setup(mCard->AnalogInAddress(), "mixer-analog-in", "Analog In", mRouting);
-    mUI->mixerDigitalIn->setup(mCard->DigitalInAddress(), "mixer-digital-in", "Digital In", mRouting);
+    mUI->mixerPCM4->setup(mCard->PCMAddress(4), "mixer-iec958-in", "IEC958 Playback", mRouting, dbus);
+    mUI->mixerPCM1->setup(mCard->PCMAddress(0), "mixer-pcm-in", "PCM Playback", mRouting, dbus);
+    mUI->mixerAnalogIn->setup(mCard->AnalogInAddress(), "mixer-analog-in", "Analog In", mRouting, dbus);
+    mUI->mixerDigitalIn->setup(mCard->DigitalInAddress(), "mixer-digital-in", "Digital In", mRouting, dbus);
 
     mRouting[mCard->DACAddress()] = mUI->masterVolume;
+    connect(dbus, SIGNAL(signalDACVolumeIncrement(int)), mUI->masterVolume, SLOT(dbus_volumeIncrement(int)));
 
     mCard->configAddresses(mRouting.keys());
 
     mUI->analogOut->setup(mCard->AnalogOutAddress(), "router-analog-out", "Analog Out", mRouting);
     mUI->digitalOut->setup(mCard->DigitalOutAddress(), "router-digital-out", "Digital Out", mRouting);
-
-
-    connect(dbus, SIGNAL(signalPCMVolumeDown()), mUI->mixerPCM1, SLOT(dbus_VolumeDown()));
-    connect(dbus, SIGNAL(signalPCMVolumeUp()), mUI->mixerPCM1, SLOT(dbus_VolumeUp()));
-    connect(dbus, SIGNAL(signalPCMVolumeMute()), mUI->mixerPCM1, SLOT(dbus_VolumeMute()));
-
-    connect(dbus, SIGNAL(signalAnalogVolumeDown()), mUI->mixerAnalogIn, SLOT(dbus_VolumeDown()));
-    connect(dbus, SIGNAL(signalAnalogVolumeUp()), mUI->mixerAnalogIn, SLOT(dbus_VolumeUp()));
-    connect(dbus, SIGNAL(signalAnalogVolumeMute()), mUI->mixerAnalogIn, SLOT(dbus_VolumeMute()));
-
-    connect(dbus, SIGNAL(signalDigitalVolumeDown()), mUI->mixerDigitalIn, SLOT(dbus_VolumeDown()));
-    connect(dbus, SIGNAL(signalDigitalVolumeUp()), mUI->mixerDigitalIn, SLOT(dbus_VolumeUp()));
-    connect(dbus, SIGNAL(signalDigitalVolumeMute()), mUI->mixerDigitalIn, SLOT(dbus_VolumeMute()));
 
     setupHWTab();
 

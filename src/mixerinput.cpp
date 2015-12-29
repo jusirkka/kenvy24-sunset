@@ -22,6 +22,7 @@
 #include "mixerinput.h"
 #include "ui_mixerinput.h"
 #include "envycard.h"
+#include "dbusiface.h"
 
 #include <qslider.h>
 #include <qcheckbox.h>
@@ -43,11 +44,13 @@ MixerInput::~MixerInput() {
     delete mUI;
 }
 
-void MixerInput::setup(int address, const QString& name, const QString& title, Routing& routing) {
+void MixerInput::setup(int address, const QString& name, const QString& title, Routing& routing, DBusIface* dbus) {
     mAddress = address;
     routing[mAddress] = this;
     mUI->inputGroup->setTitle(title);
     setObjectName(name);
+    connect(dbus, SIGNAL(signalMixerVolumeIncrement(int,int)), SLOT(dbus_volumeIncrement(int,int)));
+    connect(dbus, SIGNAL(signalMixerVolumeMute(int)), SLOT(dbus_volumeMute(int)));
 }
 
 
@@ -109,9 +112,11 @@ void MixerInput::loadFromConfig(KConfigBase* config) {
 
     bool muted = volGroup.readEntry("left-mute", false);
     mUI->checkMuteLeft->setChecked(muted);
+    on_checkMuteLeft_toggled(muted);
 
     muted = volGroup.readEntry("right-mute", false);
     mUI->checkMuteRight->setChecked(muted);
+    on_checkMuteRight_toggled(muted);
 
 
     bool locked = volGroup.readEntry("locked", true);
@@ -328,43 +333,30 @@ void MixerInput::on_checkLock_toggled(bool locked) {
 }
 
 
-void MixerInput::dbus_VolumeUp() {
+void MixerInput::dbus_volumeIncrement(int address, int incr) {
+    if (address != mAddress) return;
+
     kDebug() << "entering";
     // negative values
-    int lval = mUI->leftVolume->value();
-    int rval = mUI->rightVolume->value();
+    int lval = mUI->leftVolume->value() - incr;
+    int rval = mUI->rightVolume->value() - incr;
 
-    if (lval <= 0 || rval <= 0) {
+    if (lval < 0 || rval < 0 || lval > 96 || rval > 96) {
         return;
     }
 
-    mUI->leftVolume->setValue(lval - 1);
+    mUI->leftVolume->setValue(lval);
 
     if (!mUI->checkLock->isChecked()) {
-        mUI->rightVolume->setValue(rval - 1);
+        mUI->rightVolume->setValue(rval);
     }
     kDebug() << "leaving";
 }
 
-void MixerInput::dbus_VolumeDown() {
-    kDebug() << "entering";
-    // negative values
-    int lval = mUI->leftVolume->value();
-    int rval = mUI->rightVolume->value();
 
-    if (lval >= 96 || rval >= 96) {
-        return;
-    }
+void MixerInput::dbus_volumeMute(int address) {
+    if (address != mAddress) return;
 
-    mUI->leftVolume->setValue(lval + 1);
-
-    if (!mUI->checkLock->isChecked()) {
-        mUI->rightVolume->setValue(rval + 1);
-    }
-    kDebug() << "leaving";
-}
-
-void MixerInput::dbus_VolumeMute() {
     kDebug() << "entering";
     mUI->checkMuteLeft->toggle();
     if (!mUI->checkLock->isChecked()) {
