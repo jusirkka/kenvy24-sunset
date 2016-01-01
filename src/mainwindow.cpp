@@ -263,7 +263,7 @@ void MainWindow::updateMeters() {
     int color = m_Color;
 
     m_CurrentSlot = (m_CurrentSlot + 1) % m_MaxPeakSize;
-    kDebug() << "Current slot = " << m_CurrentSlot;
+    // kDebug() << "Current slot = " << m_CurrentSlot;
     if (m_CurrentSlot == m_MaxPeakSlot) {
         // recalculate max slot and value
         m_MaxPeakValue = 0;
