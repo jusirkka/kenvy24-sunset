@@ -24,7 +24,7 @@
 // Local includes.
 
 #include "dbusiface.h"
-#include "kenvy24_sunsetadaptor.h"
+#include "dbusifaceadaptor.h"
 #include "envycard.h"
 
 DBusIface::DBusIface(QObject *parent)
@@ -112,4 +112,16 @@ void DBusIface::dacVolumeUp()
 void DBusIface::dacVolumeDown()
 {
     emit signalDACVolumeIncrement(-1);
+}
+
+void DBusIface::on_slot_colorChanged(int color) {
+    if (color == 3) {
+        emit peakColorChanged("RED");
+    } else if (color == 2) {
+        emit peakColorChanged("YELLOW");
+    } else if (color == 1) {
+        emit peakColorChanged("GREEN");
+    } else {
+        emit peakColorChanged("BLACK");
+    }
 }

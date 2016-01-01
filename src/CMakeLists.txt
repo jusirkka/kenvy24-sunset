@@ -16,17 +16,11 @@ SET(kenvy24gui_SRCS
 
 set(kenvy24gui_SRCS
     ${kenvy24gui_SRCS}
-    ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml
-)
-
-qt4_generate_dbus_interface(
-    dbusiface.h
-    com.github.kenvy24_sunset.xml
-    OPTIONS -M
+    dbusiface.xml
 )
 
 qt4_add_dbus_adaptor(kenvy24gui_SRCS
-    ${CMAKE_CURRENT_BINARY_DIR}/com.github.kenvy24_sunset.xml
+    dbusiface.xml
     dbusiface.h
     DBusIface
 )

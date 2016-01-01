@@ -1,0 +1,36 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="com.github.kenvy24_sunset">
+    <signal name="peakColorChanged">
+      <arg name="color" type="s" direction="out"/>
+    </signal>
+    <method name="pcmPlaybackVolumeUp">
+    </method>
+    <method name="pcmPlaybackVolumeDown">
+    </method>
+    <method name="pcmPlaybackMute">
+    </method>
+    <method name="iec958PlaybackVolumeUp">
+    </method>
+    <method name="iec958PlaybackVolumeDown">
+    </method>
+    <method name="iec958PlaybackMute">
+    </method>
+    <method name="analogInVolumeUp">
+    </method>
+    <method name="analogInVolumeDown">
+    </method>
+    <method name="analogInMute">
+    </method>
+    <method name="digitalInVolumeUp">
+    </method>
+    <method name="digitalInVolumeDown">
+    </method>
+    <method name="digitalInMute">
+    </method>
+    <method name="dacVolumeUp">
+    </method>
+    <method name="dacVolumeDown">
+    </method>
+  </interface>
+</node>

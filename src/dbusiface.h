@@ -32,17 +32,12 @@ class DBusIface : public QObject
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "com.github.kenvy24_sunset")
 
-public:
-
-    DBusIface(QObject* parent=0);
-
-    ~DBusIface();
-
 signals:
     
     void signalDACVolumeIncrement(int incr);
     void signalMixerVolumeIncrement(int  address, int incr);
     void signalMixerVolumeMute(int address);
+    void peakColorChanged(const QString& color);
 
 
 
@@ -66,6 +61,15 @@ public slots:
 
     void dacVolumeUp();
     void dacVolumeDown();
+
+
+    void on_slot_colorChanged(int color);
+
+public:
+
+    DBusIface(QObject* parent=0);
+
+    ~DBusIface();
 
 private:
     int m_pcm, m_iec958, m_din, m_ain;

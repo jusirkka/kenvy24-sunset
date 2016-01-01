@@ -67,8 +67,6 @@ private slots:
     void on_actionDeleteProfile_triggered();
     void on_actionRenameProfile_triggered();
 
-    void on_actionEnableLeds_toggled(bool);
-
     void on_actionQuit_triggered();
     void on_actionClose_triggered();
 
@@ -101,10 +99,13 @@ private:
 
     QString uniqueName(const QString&);
 
+    static int Color(int level);
+
 signals:
 
     void enumConfigChanged(const QString&, const QString&);
     void boolConfigChanged(const QString&, bool);
+    void colorChanged(int color);
 
 private:
 
@@ -121,8 +122,6 @@ private:
         }
     };
 
-    typedef QVector<int> IndexList;
-    IndexList mLevelIndices;
     Ui::MainWindow *mUI;
 
     QHash<QString, QStringList> mHWStrings;
@@ -132,9 +131,11 @@ private:
     bool m_startDocked;
     bool m_shuttingDown;
     QTimer* mTimer;
-    int mUpdateInterval;
     EnvyCard* mCard;
     QMap<int, QWidget*> mRouting;
+    int m_PeakSampleFreq, m_MaxPeakSize, m_CurrentSlot, m_MaxPeakSlot, m_MaxPeakValue, m_Color;
+    QVector<int> m_MaxPeaks;
+
 };
 
 

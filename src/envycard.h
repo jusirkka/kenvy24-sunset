@@ -141,6 +141,9 @@ private:
 
     ControlElement mRawPeaks;
 
+    QVector<int> m_TestPeaks;
+    int m_TestSlot;
+
     EnvyCard();
     EnvyCard(const EnvyCard&); // not implemented
     void operator=(EnvyCard const&); // not implemented

@@ -56,11 +56,16 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     KMainWindow(),
     inSlotFlag(false),
     inEventFlag(false),
-    mLevelIndices(4),
     mUI(new Ui::MainWindow),
     m_startDocked(false),
     m_shuttingDown(false),
-    mUpdateInterval(20)
+    m_PeakSampleFreq(25),
+    m_MaxPeakSize(7*25), // 7 seconds
+    m_CurrentSlot(0),
+    m_MaxPeakSlot(0),
+    m_MaxPeakValue(0),
+    m_Color(0),
+    m_MaxPeaks(7*25)
 {
 
     mCard = &EnvyCard::Instance();
@@ -91,9 +96,6 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI->digitalOut->setup(mCard->DigitalOutAddress(), "router-digital-out", "Digital Out", mRouting);
 
     setupHWTab();
-
-    mTimer = new QTimer(this);
-    connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMeters()));
 
     readState();
     readProfiles();
@@ -128,7 +130,11 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
         show();
     }
 
-    if (mUI->actionEnableLeds->isChecked()) mTimer->start(mUpdateInterval);
+
+    connect(this, SIGNAL(colorChanged(int)), dbus, SLOT(on_slot_colorChanged(int)));
+    mTimer = new QTimer(this);
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMeters()));
+    mTimer->start(1000/m_PeakSampleFreq);
 }
 
 void MainWindow::setupHWTab() {
@@ -228,20 +234,83 @@ void MainWindow::connectToCard() {
 }
 
 
+int MainWindow::Color(int mx) {
+    if (mx > 230) return 3; // red
+    if (mx > 190) return 2; // yellow
+    if (mx > 0) return 1; // green
+    return 0; // black
+}
+
 void MainWindow::updateMeters() {
+
     EnvyCard::PeakMap levels = mCard->peaks();
 
+    if (isVisible()) {
+        foreach (int address, levels.keys()) {
+            MixerInput* mix = qobject_cast<MixerInput*>(mRouting[address]);
+            if (mix) {
+                mix->updatePeaks(levels[address]);
+                continue;
+            }
+            MasterVolume* master = qobject_cast<MasterVolume*>(mRouting[address]);
+            if (master) {
+                master->updatePeaks(levels[address]);
+                continue;
+            }
+        }
+    }
+
+    int color = m_Color;
+
+    m_CurrentSlot = (m_CurrentSlot + 1) % m_MaxPeakSize;
+    kDebug() << "Current slot = " << m_CurrentSlot;
+    if (m_CurrentSlot == m_MaxPeakSlot) {
+        // recalculate max slot and value
+        m_MaxPeakValue = 0;
+        for (int idx = 0; idx < m_MaxPeakSize - 1; idx++) {
+            int slot = (m_CurrentSlot + 1 + idx) % m_MaxPeakSize;
+            int value = m_MaxPeaks[slot];
+            if (value >= m_MaxPeakValue) {
+                m_MaxPeakValue = value;
+                m_MaxPeakSlot = slot;
+            }
+        }
+        color = Color(m_MaxPeakValue);
+        kDebug() << "Recalculated max value, slot = " << m_MaxPeakValue << m_MaxPeakSlot;
+    }
+
+
+
+    int slotmax = 0;
     foreach (int address, levels.keys()) {
-       MixerInput* mix = qobject_cast<MixerInput*>(mRouting[address]);
-       if (mix) {
-           mix->updatePeaks(levels[address]);
-           continue;
-       }
-       MasterVolume* master = qobject_cast<MasterVolume*>(mRouting[address]);
-       if (master) {
-           master->updatePeaks(levels[address]);
-           continue;
-       }
+        StereoLevels p = levels[address];
+        int mx = p.left > p.right ? p.left : p.right;
+        if (mx >= slotmax) slotmax = mx;
+    }
+
+
+    m_MaxPeaks[m_CurrentSlot] = slotmax;
+    if (slotmax >= m_MaxPeakValue) {
+        m_MaxPeakValue = slotmax;
+        m_MaxPeakSlot = m_CurrentSlot;
+        color = Color(m_MaxPeakValue);
+        kDebug() << "Updated max value, slot = " << m_MaxPeakValue << m_MaxPeakSlot;
+    }
+
+
+    if (color != m_Color) {
+        kDebug() << "Level color changed: " << m_Color << "=>" << color;
+        m_Color = color;
+        emit colorChanged(m_Color);
+    }
+
+    if (m_MaxPeakValue == 0 && mTimer->interval() != 1000) {
+        mTimer->setInterval(1000);
+        return;
+    }
+
+    if (mTimer->interval() == 1000 && m_MaxPeakValue != 0) {
+        mTimer->setInterval(1000/m_PeakSampleFreq);
     }
 }
 
@@ -430,14 +499,6 @@ void MainWindow::on_actionRenameProfile_triggered() {
     }
 }
 
-void MainWindow::on_actionEnableLeds_toggled(bool on) {
-    if (on) {
-        mTimer->start(mUpdateInterval);
-    } else {
-        mTimer->stop();
-    }
-}
-
 void MainWindow::on_actionQuit_triggered() {
     kDebug() << "entering ";
     m_shuttingDown = true;
@@ -463,7 +524,6 @@ void MainWindow::writeState() {
     state.writeEntry("show-toolbar", mUI->toolBar->isVisible());
     state.writeEntry("show-statusbar", mUI->statusbar->isVisible());
     state.writeEntry("show-profiles", mUI->profileDock->isVisible());
-    state.writeEntry("enable-leds", mUI->actionEnableLeds->isChecked());
     if (mUI->profiles->currentItem()) {
         state.writeEntry("selected-profile", mUI->profiles->currentItem()->text());
     }
@@ -522,7 +582,6 @@ void MainWindow::readState() {
     mUI->actionToolbar->setChecked(state.readEntry("show-toolbar", true));
     mUI->actionStatusbar->setChecked(state.readEntry("show-statusbar", true));
     mUI->actionProfileDock->setChecked(state.readEntry("show-profiles", true));
-    mUI->actionEnableLeds->setChecked(state.readEntry("enable-leds", true));
     QRect default_geom(30, 30, 600, 400);
     setGeometry(state.readEntry("geometry", default_geom));
     addDockWidget((Qt::DockWidgetArea) state.readEntry("profiles-dock-area", (int) Qt::LeftDockWidgetArea), mUI->profileDock);

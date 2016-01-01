@@ -88,7 +88,7 @@
            <number>0</number>
           </property>
           <item>
-           <layout class="QHBoxLayout" stretch="1,1,1">
+           <layout class="QHBoxLayout" stretch="0,0,0">
             <property name="spacing">
              <number>0</number>
             </property>
