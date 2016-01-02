@@ -24,7 +24,7 @@
 // Local includes.
 
 #include "dbusiface.h"
-#include "dbusifaceadaptor.h"
+#include "kenvy24_sunsetadaptor.h"
 #include "envycard.h"
 
 DBusIface::DBusIface(QObject *parent)
