@@ -59,13 +59,13 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI(new Ui::MainWindow),
     m_startDocked(false),
     m_shuttingDown(false),
-    m_PeakSampleFreq(25),
-    m_MaxPeakSize(7*25), // 7 seconds
+    m_PeakSampleFreq(40),
+    m_MaxPeakSize(7*m_PeakSampleFreq), // 7 seconds
     m_CurrentSlot(0),
     m_MaxPeakSlot(0),
     m_MaxPeakValue(0),
     m_Color(0),
-    m_MaxPeaks(7*25)
+    m_MaxPeaks(m_MaxPeakSize)
 {
 
     mCard = &EnvyCard::Instance();
