@@ -59,8 +59,8 @@ MainWindow::MainWindow(DBusIface* dbus, bool docked):
     mUI(new Ui::MainWindow),
     m_startDocked(false),
     m_shuttingDown(false),
-    m_PeakSampleFreq(40),
-    m_MaxPeakSize(7*m_PeakSampleFreq), // 7 seconds
+    m_PeakSampleFreq(50),
+    m_MaxPeakSize(10*m_PeakSampleFreq), // 10 seconds
     m_CurrentSlot(0),
     m_MaxPeakSlot(0),
     m_MaxPeakValue(0),
@@ -235,8 +235,8 @@ void MainWindow::connectToCard() {
 
 
 int MainWindow::Color(int mx) {
-    if (mx > 230) return 3; // red
-    if (mx > 190) return 2; // yellow
+    if (mx > 232) return 3; // red
+    if (mx > 174) return 2; // yellow
     if (mx > 0) return 1; // green
     return 0; // black
 }

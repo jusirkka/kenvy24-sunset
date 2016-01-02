@@ -115,13 +115,10 @@ void DBusIface::dacVolumeDown()
 }
 
 void DBusIface::on_slot_colorChanged(int color) {
-    if (color == 3) {
-        emit peakColorChanged("RED");
-    } else if (color == 2) {
-        emit peakColorChanged("YELLOW");
-    } else if (color == 1) {
-        emit peakColorChanged("GREEN");
-    } else {
-        emit peakColorChanged("BLACK");
-    }
+    m_peakColor = color;
+    emit peakColorChanged(m_peakColor);
+}
+
+int DBusIface::peakColor() {
+    return m_peakColor;
 }

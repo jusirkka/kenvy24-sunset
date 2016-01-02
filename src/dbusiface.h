@@ -37,7 +37,7 @@ signals:
     void signalDACVolumeIncrement(int incr);
     void signalMixerVolumeIncrement(int  address, int incr);
     void signalMixerVolumeMute(int address);
-    void peakColorChanged(const QString& color);
+    void peakColorChanged(int color);
 
 
 
@@ -62,6 +62,7 @@ public slots:
     void dacVolumeUp();
     void dacVolumeDown();
 
+    int peakColor();
 
     void on_slot_colorChanged(int color);
 
@@ -73,6 +74,7 @@ public:
 
 private:
     int m_pcm, m_iec958, m_din, m_ain;
+    int m_peakColor;
 };
 
 #endif // DBUSIFACE_H

@@ -2,7 +2,7 @@
 <node>
   <interface name="com.github.kenvy24_sunset">
     <signal name="peakColorChanged">
-      <arg name="color" type="s" direction="out"/>
+      <arg name="color" type="i" direction="out"/>
     </signal>
     <method name="pcmPlaybackVolumeUp">
     </method>
@@ -31,6 +31,9 @@
     <method name="dacVolumeUp">
     </method>
     <method name="dacVolumeDown">
+    </method>
+    <method name="peakColor">
+      <arg type="i" direction="out"/>
     </method>
   </interface>
 </node>
