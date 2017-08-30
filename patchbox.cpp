@@ -21,6 +21,7 @@
 #include "ui_patchbox.h"
 #include "patchbox.h"
 #include "envycard.h"
+#include "settings.h"
 
 #include <QButtonGroup>
 #include <kconfig.h>
@@ -87,118 +88,118 @@ void PatchBox::setup(int address, const QString& name, const QString& title, Rou
 }
 
 void PatchBox::connectToCard(EnvyCard* envyCard) {
-    connect(this, SIGNAL(routeChanged(int, LeftRight, const QString&)),
-            envyCard, SLOT(on_slot_mixerRouteChanged(int, LeftRight, const QString&)));
+    connect(this, SIGNAL(routeChanged(int, Position, const QString&)),
+            envyCard, SLOT(on_slot_mixerRouteChanged(int, Position, const QString&)));
 }
 
 void PatchBox::connectFromCard(EnvyCard* envyCard) {
-    connect(envyCard, SIGNAL(mixerRouteChanged(int,LeftRight,const QString&)),
-            SLOT(updateRoute(int, LeftRight, const QString&)));
+    connect(envyCard, SIGNAL(mixerRouteChanged(int,Position,const QString&)),
+            SLOT(updateRoute(int, Position, const QString&)));
 }
 
-void PatchBox::saveToConfig(KConfigBase* config) {
-    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mAddress));
-    routing.writeEntry("locked", mUI->checkLock->isChecked());
-    routing.writeEntry(QString("left-route"), mLGroup->checkedId());
-    routing.writeEntry(QString("right-route"), mRGroup->checkedId());
+void PatchBox::saveToConfig(Settings& s) {
+    s.beginGroup(QString("%1-%2").arg(objectName()).arg(mAddress));
+    s.setValue("locked", mUI->checkLock->isChecked());
+    s.setValue("left-route", mLGroup->checkedId());
+    s.setValue("right-route", mRGroup->checkedId());
+    s.endGroup();
 }
 
-void PatchBox::loadFromConfig(KConfigBase* config) {
-    kDebug()  << "entering";
+void PatchBox::loadFromConfig(Settings& s) {
 
-    KConfigGroup routing(config, QString("%1-%2").arg(objectName()).arg(mAddress));
+    s.beginGroup(QString("%1-%2").arg(objectName()).arg(mAddress));
 
-    int id = routing.readEntry("left-route", mLSources[R_SRC_MIXER]);
+    int id = s.get("left-route", mLSources[R_SRC_MIXER]);
     mLGroup->button(id)->setChecked(true);
     leftPressed(id);
 
-    id = routing.readEntry("right-route", mRSources[R_SRC_MIXER]);
+    id = s.get("right-route", mRSources[R_SRC_MIXER]);
     mRGroup->button(id)->setChecked(true);
     rightPressed(id);
 
-    bool locked = routing.readEntry("locked", true);
+    bool locked = s.value("locked", true).toBool();
     mUI->checkLock->setChecked(locked);
 
-    kDebug()  << "leaving";
+    s.endGroup();
 }
 
-void PatchBox::updateRoute(int address, LeftRight channel, const QString& soundSource) {
+void PatchBox::updateRoute(int address, Position channel, const QString& soundSource) {
     if (address != mAddress) return;
 
-    kDebug()  << "entering ";
+    qDebug()  << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
-        if (channel == LEFT) {
-            kDebug()  << "set left " << soundSource;
+        if (channel == Position::Left) {
+            qDebug()  << "set left " << soundSource;
             mLGroup->button(mLSources[soundSource])->setChecked(true);
         } else {
-            kDebug()  << "set right " << soundSource;
+            qDebug()  << "set right " << soundSource;
             mRGroup->button(mRSources[soundSource])->setChecked(true);
         }
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void PatchBox::leftPressed(int btn) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         const QString& soundSource = mLSources.key(btn);
-        kDebug()  << "notify card " << soundSource;
-        emit routeChanged(mAddress, LEFT, soundSource);
+        qDebug()  << "notify card " << soundSource;
+        emit routeChanged(mAddress, Position::Left, soundSource);
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void PatchBox::rightPressed(int btn) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         const QString& soundSource = mRSources.key(btn);
-        kDebug()  << "notify card " << soundSource;
-        emit routeChanged(mAddress, RIGHT, soundSource);
+        qDebug()  << "notify card " << soundSource;
+        emit routeChanged(mAddress, Position::Right, soundSource);
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void PatchBox::leftNotified(int btn) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     QString searchTerm = mRSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kDebug()  << "set selection " << searchTerm;
+    qDebug()  << "set selection " << searchTerm;
     mLGroup->button(mLSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug()  << "notify card " <<  searchTerm;
-    emit routeChanged(mAddress, LEFT, searchTerm);
+    qDebug()  << "notify card " <<  searchTerm;
+    emit routeChanged(mAddress, Position::Left, searchTerm);
 
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void PatchBox::rightNotified(int btn) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     QString searchTerm = mLSources.key(btn);
     if (searchTerm == QString(R_SRC_DIGITAL_L)) {
         searchTerm = QString(R_SRC_DIGITAL_R);
     } else if (searchTerm == QString(R_SRC_DIGITAL_R)) {
         searchTerm = QString(R_SRC_DIGITAL_L);
     }
-    kDebug()  << "set selection " << searchTerm;
+    qDebug()  << "set selection " << searchTerm;
     mRGroup->button(mRSources[searchTerm])->setChecked(true);
 
     ExclusiveFlag inEvent(inEventFlag);
-    kDebug()  << "notify card " <<  searchTerm;
-    emit routeChanged(mAddress, RIGHT, searchTerm);
+    qDebug()  << "notify card " <<  searchTerm;
+    emit routeChanged(mAddress, Position::Right, searchTerm);
 
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void PatchBox::lockToggled(bool locked) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     if (locked) {
         connect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
         connect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
@@ -206,11 +207,6 @@ void PatchBox::lockToggled(bool locked) {
         disconnect(mLGroup, SIGNAL(buttonClicked(int)), this, SLOT(rightNotified(int)));
         disconnect(mRGroup, SIGNAL(buttonClicked(int)), this, SLOT(leftNotified(int)));
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
-
-
-
-
-#include "patchbox.moc"

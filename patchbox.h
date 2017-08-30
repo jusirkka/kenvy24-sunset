@@ -17,26 +17,26 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _MIXERINPUT_H_INCLUDED_
-#define _MIXERINPUT_H_INCLUDED_
+#ifndef _PATCHBOX_H_INCLUDED_
+#define _PATCHBOX_H_INCLUDED_
 
 #include "envycard.h"
 #include <QWidget>
-#include <ksharedconfig.h>
+#include <QRadioButton>
 
-class KConfig;
+class Settings;
+class QButtonGroup;
 
 namespace Ui {
-class MixerInput;
+class PatchBox;
 }
 
-class DBusIface;
-
-class MixerInput : public QWidget {
+class PatchBox : public QWidget {
     Q_OBJECT
 
+public:
+
 private:
-    int mAddress;
     bool inSlotFlag;
     bool inEventFlag;
 
@@ -50,55 +50,42 @@ private:
         }
     };
 
-    Ui::MixerInput* mUI;
-    int mVDelta;
-    int mSDelta;
+    Ui::PatchBox* mUI;
+    int mAddress;
+    QHash<QString, int> mLSources;
+    QHash<QString, int> mRSources;
+    QButtonGroup* mLGroup;
+    QButtonGroup* mRGroup;
 
 public:
+    PatchBox(QWidget* parent);
+    ~PatchBox();
 
     typedef QMap<int, QWidget*> Routing;
 
-    MixerInput(QWidget* parent);
-    ~MixerInput();
-
-    void setup(int index, const QString& name, const QString& title, Routing& routing, DBusIface* dbus);
+    void setup(int address, const QString& name, const QString& title, Routing& routing);
     void connectToCard(EnvyCard* envyCard);
     void connectFromCard(EnvyCard* envyCard);
-        
-    void saveToConfig(KConfigBase*);
-    void loadFromConfig(KConfigBase*);
 
-    void updatePeaks(StereoLevels level);
+    void saveToConfig(Settings&);
+    void loadFromConfig(Settings&);
 
 public slots:
 
-    void mixerUpdateMuteSwitch(int, LeftRight, bool);
-    void mixerUpdatePlaybackVolume(int index, LeftRight channel, const ChannelState&);
+    void updateRoute(int index, Position channel, const QString& soundSource);
 
-    void on_leftVolume_valueChanged(int);
-    void on_leftStereo_valueChanged(int);
-    void on_rightVolume_valueChanged(int);
-    void on_rightStereo_valueChanged(int);
+private slots:
 
-    void on_checkMuteLeft_toggled(bool);
-    void on_checkMuteRight_toggled(bool);
-    void on_checkLock_toggled(bool);
-
-    void dbus_volumeIncrement(int address, int incr);
-    void dbus_volumeMute(int address);
-
+    void leftNotified(int);
+    void rightNotified(int);
+    void leftPressed(int);
+    void rightPressed(int);
+    void lockToggled(bool);
 
 signals:
 
-    void muted(int index, LeftRight channel, bool m);
-    void adjusted(int index, LeftRight channel, const ChannelState&);
-    void notifyRightMute(bool);
-    void notifyLeftMute(bool);
-    void notifyRightVolume(int);
-    void notifyLeftVolume(int);
-    void notifyRightStereo(int);
-    void notifyLeftStereo(int);
+    void routeChanged(int index, Position channel, const QString& soundSource);
+
 };
 
-
-#endif // _MIXERINPUT_H_INCLUDED_
+#endif // _PATCHBOX_H_INCLUDED_

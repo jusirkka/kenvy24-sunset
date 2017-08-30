@@ -68,10 +68,7 @@
  * Structure used by level monitors
  */
 
-enum LeftRight {
-    LEFT = 0,
-    RIGHT = 1
-};
+enum class Position {Left = 0, Right = 1};
 
 class ChannelState;
 
@@ -79,7 +76,7 @@ struct StereoLevels {
   int left, right;
   StereoLevels(int l=0, int r=0): left(l), right(r) {}
 
-  ChannelState state(LeftRight k) const;
+  ChannelState state(Position p) const;
 
 };
 
@@ -92,7 +89,7 @@ struct ChannelState {
 
     ChannelState(int v=0, int s=0): volume(v), stereo(s) {}
 
-    StereoLevels levels(LeftRight k) const;
+    StereoLevels levels(Position k) const;
 };
 
 
@@ -175,20 +172,20 @@ public:
 
 
 signals:
-    void mixerVolumeChanged(int source, LeftRight channel, const ChannelState&);
-    void mixerMuteSwitchChanged(int source, LeftRight channel, bool on);
-    void mixerRouteChanged(int sink, LeftRight, const QString&);
-    void masterVolumeChanged(LeftRight channel, int);
+    void mixerVolumeChanged(int source, Position channel, const ChannelState&);
+    void mixerMuteSwitchChanged(int source, Position channel, bool on);
+    void mixerRouteChanged(int sink, Position, const QString&);
+    void masterVolumeChanged(Position channel, int);
     void boolConfigChanged(const QString&, bool);
     void enumConfigChanged(const QString&, const QString&);
 
 protected slots:
     void driverEvent(int);
 
-    void on_slot_mixerVolumeChanged(int source, LeftRight, const ChannelState&);
-    void on_slot_mixerMuteSwitchChanged(int source, LeftRight, bool);
-    void on_slot_mixerRouteChanged(int sink, LeftRight channel, const QString&);
-    void on_slot_masterVolumeChanged(LeftRight, int level);
+    void on_slot_mixerVolumeChanged(int source, Position, const ChannelState&);
+    void on_slot_mixerMuteSwitchChanged(int source, Position, bool);
+    void on_slot_mixerRouteChanged(int sink, Position channel, const QString&);
+    void on_slot_masterVolumeChanged(Position, int level);
     void on_slot_boolConfigChanged(const QString&, bool);
     void on_slot_enumConfigChanged(const QString&, const QString&);
 
@@ -206,7 +203,7 @@ private:
     int Address(const QString& section, int index) const;
     QString Section(int address);
     QString MuteSwitchSection(int address);
-    int Index(int address, LeftRight channel) const;
+    int Index(int address, Position channel) const;
 
 };
 

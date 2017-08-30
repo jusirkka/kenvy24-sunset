@@ -17,78 +17,40 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef _ENVY_STRUCTS_H_
-#define _ENVY_STRUCTS_H_
+#ifndef _PEAKMETER_H_INCLUDED_
+#define _PEAKMETER_H_INCLUDED_
+
+#include <QWidget>
+
+class Led;
 
 
-/**
- * Router sources: these are routed to either digital L/R out or analog L/R out
- */
-#define R_SRC_PCM "PCM Out"
-#define R_SRC_ANALOG "H/W In 0"
-#define R_SRC_DIGITAL_L "IEC958 In L"
-#define R_SRC_DIGITAL_R "IEC958 In R"
-#define R_SRC_MIXER "Digital Mixer"
+
+class PeakMeter : public QWidget {
+    Q_OBJECT
+
+public:
+    typedef QList<Led*> LedList;
+    typedef QListIterator<Led*> LedIterator;
+
+private:
+
+    LedList mLeds;
+    int mLevel;
+    int mDischargeRate;
+    int mDischargeStep;
+
+public:
+    PeakMeter(QWidget* parent);
+    ~PeakMeter();
+
+    void updatePeak(int level);
+
+public slots:
+
+private:
 
 
-/**
- * HW settings items
- */
-
-#define HW_ENUM_INTERNAL_CLOCK "Multi Track Internal Clock"
-#define HW_ENUM_CLOCK_DEFAULT "Multi Track Internal Clock Default"
-#define HW_ENUM_DEEMPHASIS "Deemphasis"
-#define HW_BOOL_RATE_LOCKING "Multi Track Rate Locking"
-#define HW_BOOL_RATE_RESET "Multi Track Rate Reset"
-
-
-/**
- * NOTE: a channel has two, left and right, streams
- */
-
-
-/**
- * number of PCM output channels
- */
-#define MAX_PCM_CHANNELS 4
-
-/**
- * number of *stereo* output SPDIF channels
- */
-#define MAX_SPDIF_CHANNELS	1
-
-#define MAX_MULTI_CHANNELS 5 // MAX_PCM_CHANNELS + MAX_SPDIF_CHANNELS
-
-/**
- * Structure used by level monitors
- */
-struct StereoLevels {
-  int left;
-  int right;
 };
 
-enum LeftRight { 
-    LEFT = 0, 
-    RIGHT = 1 
-};
-
-/**
- * Structure used to adjust mixer levels
- */
-struct ChannelState {
-    int volume;
-    int stereo;
-
-    ChannelState(LeftRight k, int left, int right) {
-        if (k == LEFT) {
-            volume = left;
-            stereo = right;
-        } else {
-            volume = right;
-            stereo = left;
-        }
-    }
-};
-
-
-#endif // _ENVY_STRUCTS_H_
+#endif // _PEAKMETER_H_INCLUDED_

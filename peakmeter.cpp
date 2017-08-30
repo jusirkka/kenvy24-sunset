@@ -18,32 +18,43 @@
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
 
-#include "ui_peakmeter.h"
+#include <QVBoxLayout>
+
 #include "peakmeter.h"
+#include "led.h"
 
-#define L(x, y, z) mLeds.insert(x, mUI->led_##x); mLeds.insert(y, mUI->led_##y); mLeds.insert(z, mUI->led_##z)
+PeakMeter::PeakMeter(QWidget* parent)
+    : QWidget(parent),
+      mLevel(0),
+      mDischargeRate(5),
+      mDischargeStep(5)
+{
+    QVBoxLayout* leds = new QVBoxLayout;
+    leds->setDirection(QBoxLayout::BottomToTop);
+    leds->setSpacing(0);
+    leds->setContentsMargins(0, 0, 0, 0);
+    for (int i = 0; i < 14; i++) {
+        Led* green = new Led(Qt::green, Led::Off);
+        mLeds.append(green);
+        leds->addWidget(green);
+    }
+    for (int i = 0; i < 5; i++) {
+        Led* yellow = new Led(Qt::yellow, Led::Off);
+        mLeds.append(yellow);
+        leds->addWidget(yellow);
+    }
+    for (int i = 0; i < 2; i++) {
+        Led* red = new Led(Qt::red, Led::Off);
+        mLeds.append(red);
+        leds->addWidget(red);
+    }
 
-PeakMeter::PeakMeter(QWidget* parent) :
-        QWidget(parent),
-        mUI(new Ui::PeakMeter),
-        mLevel(0),
-        mDischargeRate(5),
-        mDischargeStep(5) {
+    setLayout(leds);
 
-    mUI->setupUi(this);
-
-    L(0, 1, 2);
-    L(3, 4, 5);
-    L(6, 7, 8);
-    L(9, 10, 11);
-    L(12, 13, 14);
-    L(15, 16, 17);
-    L(18, 19, 20);
 }
 
 
 PeakMeter::~PeakMeter() {
-    delete mUI;
 }
 
 
@@ -67,5 +78,3 @@ void PeakMeter::updatePeak(int peak) {
     }
 }
 
-
-#include "peakmeter.moc"

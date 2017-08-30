@@ -17,47 +17,72 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef _MASTERVOLUME_H_INCLUDED_
+#define _MASTERVOLUME_H_INCLUDED_
 
+#include <QWidget>
 
-#include <kcmdlineargs.h>
-#include <kaboutdata.h>
-#include <klocale.h>
-#include <kglobal.h>
-#include <kstandarddirs.h>
-#include <kdebug.h>
+class Settings;
+class EnvyCard;
+class StereoLevels;
+enum class Position;
 
-#include "kenvy24.h"
-#include "version.h"
-
-
-static const char description[] =
-    I18N_NOOP("VIA Envy24 based sound cards control utility. See xxx for the documentation");
-
-
-
-int main(int argc, char **argv)
-{
-    kDebug() << "starting";
-
-    KCmdLineOptions options;
-    options.add("docked", ki18n("start docked"));
-
-    KAboutData about(
-        "kenvy24-sunset", 0,
-        ki18n("KEnvy24Sunset"), VERSION,
-        ki18n("The ICE1712 based cards KDE control panel"), KAboutData::License_GPL,
-        ki18n("(C) 2015 Jukka Sirkka"),
-        ki18n("Feedback:\njukka.sirkka@iki.fi\n\n(Build Date: " __DATE__ ")"),
-        "http://www.github.com/jusirkka/kenvy24-sunset"
-    );
-    KCmdLineArgs::init(argc, argv, &about);
-    KCmdLineArgs::addCmdLineOptions(options);
-
-   if (!KEnvy24App::start()) return 0;
-
-   KEnvy24App *app = new KEnvy24App(KCmdLineArgs::parsedArgs()->isSet("docked"));
-   int ret = app->exec();
-   delete app;
-   return ret;
+namespace Ui {
+class MasterVolume;
 }
 
+class MasterVolume : public QWidget {
+    Q_OBJECT
+
+private:
+    bool inSlotFlag;
+    bool inEventFlag;
+
+    struct ExclusiveFlag {
+        bool& slotFlag;
+        ExclusiveFlag(bool& flag) : slotFlag(flag) {
+            flag = true;
+        }
+        ~ExclusiveFlag() {
+            slotFlag = false;
+        }
+    };
+
+
+    Ui::MasterVolume *mUI;
+
+    int mLRDiff;
+
+public:
+
+
+    MasterVolume(QWidget* parent);
+    ~MasterVolume();
+
+    void connectToCard(EnvyCard* envyCard);
+    void connectFromCard(EnvyCard* envyCard);
+
+    void saveToConfig(Settings&);
+    void loadFromConfig(Settings&);
+
+    void updatePeaks(const StereoLevels& level);
+
+    void dbus_volumeIncrement(int incr);
+
+public slots:
+
+    void analogUpdateDACVolume(Position, int);
+
+    void on_checkLock_toggled(bool);
+    void on_rightSlider_valueChanged(int);
+    void on_leftSlider_valueChanged(int);
+
+signals:
+
+    void adjusted(Position channel, int volume);
+    void notifyRightVolume(int);
+    void notifyLeftVolume(int);
+};
+
+
+#endif // _MASTERVOLUME_H_INCLUDED_

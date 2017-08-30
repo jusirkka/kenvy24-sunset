@@ -28,6 +28,7 @@
 #include "ui_mastervolume.h"
 #include "peakmeter.h"
 #include "envycard.h"
+#include "settings.h"
 
 MasterVolume::MasterVolume(QWidget* parent) :
     QWidget(parent),
@@ -44,41 +45,41 @@ MasterVolume::~MasterVolume() {
 }
 
 void MasterVolume::connectToCard(EnvyCard* envyCard) {
-    connect(this, SIGNAL(adjusted(LeftRight, int)), envyCard, SLOT(on_slot_masterVolumeChanged(LeftRight,int)));
+    connect(this, SIGNAL(adjusted(Position, int)), envyCard, SLOT(on_slot_masterVolumeChanged(Position,int)));
 }
 
 void MasterVolume::connectFromCard(EnvyCard* envyCard) {
-    connect(envyCard, SIGNAL(masterVolumeChanged(LeftRight,int)), this, SLOT(analogUpdateDACVolume(LeftRight, int)));
+    connect(envyCard, SIGNAL(masterVolumeChanged(Position,int)), this, SLOT(analogUpdateDACVolume(Position, int)));
 }
 
-void MasterVolume::updatePeaks(StereoLevels level) {
+void MasterVolume::updatePeaks(const StereoLevels& level) {
     mUI->leftMeter->updatePeak(level.left);
     mUI->rightMeter->updatePeak(level.right);
 }
 
 
 
-void MasterVolume::saveToConfig(KConfigBase* config) {
-    KConfigGroup volGroup(config, objectName());
-    volGroup.writeEntry("locked", mUI->checkLock->isChecked());
-    volGroup.writeEntry("left-volume", mUI->leftSlider->value());
-    volGroup.writeEntry("right-volume", mUI->rightSlider->value());
+void MasterVolume::saveToConfig(Settings& s) {
+    s.beginGroup(objectName());
+    s.setValue("locked", mUI->checkLock->isChecked());
+    s.setValue("left-volume", mUI->leftSlider->value());
+    s.setValue("right-volume", mUI->rightSlider->value());
+    s.endGroup();
 }
 
-void MasterVolume::loadFromConfig(KConfigBase* config) {
-    kDebug()  << "entering ";
-    KConfigGroup volGroup(config, objectName());
+void MasterVolume::loadFromConfig(Settings& s) {
+    s.beginGroup(objectName());
 
-    int val = volGroup.readEntry("left-volume", 20);
+    int val = s.get("left-volume", 20);
     mUI->leftSlider->setValue(val);
     on_leftSlider_valueChanged(val);
 
-    val = volGroup.readEntry("right-volume", 20);
+    val = s.get("right-volume", 20);
     mUI->rightSlider->setValue(val);
     on_rightSlider_valueChanged(val);
 
 
-    bool locked = volGroup.readEntry("locked", true);
+    bool locked = s.value("locked", true).toBool();
     if (locked) {
         mLRDiff = mUI->leftSlider->value() - mUI->rightSlider->value();
     } else {
@@ -86,28 +87,29 @@ void MasterVolume::loadFromConfig(KConfigBase* config) {
     }
     mUI->checkLock->setChecked(locked);
 
-    kDebug()  << "leaving";
+    s.endGroup();
+
 }
 
 
-void MasterVolume::analogUpdateDACVolume(LeftRight channel, int value) {
-    kDebug()  << "entering ";
+void MasterVolume::analogUpdateDACVolume(Position channel, int value) {
+    qDebug()  << "entering ";
     ExclusiveFlag inSlot(inSlotFlag);
     if (!inEventFlag) {
         int dispVal = 127 - value;
-        if (channel == LEFT) {
-            kDebug()  << "set left";
+        if (channel == Position::Left) {
+            qDebug()  << "set left";
             mUI->leftSlider->setValue(dispVal);
         } else {
-            kDebug()  << "set right";
+            qDebug()  << "set right";
             mUI->rightSlider->setValue(dispVal);
         }
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void MasterVolume::on_leftSlider_valueChanged(int left) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     int right = left - mLRDiff;
     if (right < 0) {
         mUI->leftSlider->setValue(mLRDiff);
@@ -122,16 +124,16 @@ void MasterVolume::on_leftSlider_valueChanged(int left) {
     ExclusiveFlag inEvent(inEventFlag);
     if (!inSlotFlag) {
         int value = 127 - left;
-        kDebug()  << "notify card";
-        emit adjusted(LEFT, value);
-        kDebug()  << "notify right";
+        qDebug()  << "notify card";
+        emit adjusted(Position::Left, value);
+        qDebug()  << "notify right";
         emit notifyRightVolume(right);
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void MasterVolume::on_rightSlider_valueChanged(int right) {
-    kDebug()  << "entering";
+    qDebug()  << "entering";
     ExclusiveFlag inEvent(inEventFlag);
 
     int left = right + mLRDiff;
@@ -147,16 +149,16 @@ void MasterVolume::on_rightSlider_valueChanged(int right) {
 
     if (!inSlotFlag) {
         int value  = 127 - right;
-        kDebug()  << "notify card";
-        emit adjusted(RIGHT, value);
-        kDebug()  << "notify left";
+        qDebug()  << "notify card";
+        emit adjusted(Position::Right, value);
+        qDebug()  << "notify left";
         emit notifyLeftVolume(left);
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void MasterVolume::on_checkLock_toggled(bool locked) {
-    kDebug()  << "entering ";
+    qDebug()  << "entering ";
     if (locked) {
         mLRDiff = mUI->leftSlider->value() - mUI->rightSlider->value();
         connect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftSlider, SLOT(setValue(int)));
@@ -166,12 +168,12 @@ void MasterVolume::on_checkLock_toggled(bool locked) {
         disconnect(this, SIGNAL(notifyLeftVolume(int)), mUI->leftSlider, SLOT(setValue(int)));
         disconnect(this, SIGNAL(notifyRightVolume(int)), mUI->rightSlider, SLOT(setValue(int)));
     }
-    kDebug()  << "leaving";
+    qDebug()  << "leaving";
 }
 
 void MasterVolume::dbus_volumeIncrement(int incr) {
 
-    kDebug() << "entering";
+    qDebug() << "entering";
     // negative values
     int lval = mUI->leftSlider->value() - incr;
     int rval = mUI->rightSlider->value() - incr;
@@ -185,8 +187,6 @@ void MasterVolume::dbus_volumeIncrement(int incr) {
     if (!mUI->checkLock->isChecked()) {
         mUI->rightSlider->setValue(rval);
     }
-    kDebug() << "leaving";
+    qDebug() << "leaving";
 }
 
-
-#include "mastervolume.moc"

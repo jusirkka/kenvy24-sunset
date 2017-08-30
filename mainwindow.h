@@ -21,24 +21,24 @@
 #ifndef kenvy_mainwindow_h
 #define kenvy_mainwindow_h
 
-#include <kmainwindow.h>
-#include <ksharedconfig.h>
-
-#include "envycard.h"
+#include <QMainWindow>
+#include <QMap>
 
 class QButtonGroup;
 class QCheckBox;
 class QListWidgetItem;
-class DBusIface;
 class QTimer;
-class KStatusNotifierItem;
+
+class Settings;
+class EnvyCard;
+class TrayItem;
 
 namespace Ui {
 class MainWindow;
 }
 
 
-class MainWindow: public KMainWindow {
+class MainWindow: public QMainWindow {
 
     Q_OBJECT
 
@@ -46,8 +46,9 @@ class MainWindow: public KMainWindow {
 
 public:
 
-    MainWindow(DBusIface*, bool);
+    MainWindow(bool docked);
     virtual ~MainWindow();
+
 
 public slots:
 
@@ -59,40 +60,54 @@ public slots:
     void deemphasisChanged(int);
     void masterClockChanged(int);
 
+    // dbus mixer interface
+    void pcmPlaybackVolumeUp();
+    void pcmPlaybackVolumeDown();
+    void pcmPlaybackMute();
+    void iec958PlaybackVolumeUp();
+    void iec958PlaybackVolumeDown();
+    void iec958PlaybackMute();
+    void analogInVolumeUp();
+    void analogInVolumeDown();
+    void analogInMute();
+    void digitalInVolumeUp();
+    void digitalInVolumeDown();
+    void digitalInMute();
+    void dacVolumeUp();
+    void dacVolumeDown();
+    int peakColor() const;
+    // dbus tray interface
+    void restoreWindow();
+    void minimizeWindow();
+
+protected:
+
+    void closeEvent(QCloseEvent *event);
 
 private slots:
 
-    void on_actionNewProfile_triggered();
-    void on_actionSaveProfile_triggered();
-    void on_actionDeleteProfile_triggered();
-    void on_actionRenameProfile_triggered();
 
     void on_actionQuit_triggered();
     void on_actionClose_triggered();
+    void on_actionSave_triggered();
 
     void on_checkLock_toggled(bool);
     void on_checkReset_toggled(bool);
-
-    void on_profiles_currentItemChanged(QListWidgetItem* curr, QListWidgetItem* prev);
 
     void updateMeters();
 
 private:
 
-    virtual bool queryClose();
+    void readGUIState();
+    void readMixerState();
 
-    void readState();
-    void readProfiles();
-    void loadProfile();
+    void writeGUIState();
+    void writeMixerState();
 
-    void writeState();
-    void writeProfile();
-
-    void createDefaultProfile();
 
     void setupHWTab();
-    void loadHWFromConfig(KConfigBase*);
-    void saveHWToConfig(KConfigBase*);
+    void loadHWFromConfig(Settings&);
+    void saveHWToConfig(Settings&);
 
     void connectToCard();
     void connectFromCard();
@@ -105,7 +120,8 @@ signals:
 
     void enumConfigChanged(const QString&, const QString&);
     void boolConfigChanged(const QString&, bool);
-    void colorChanged(int color);
+    // dbus mixer interface
+    void peakColorChanged(int color);
 
 private:
 
@@ -127,14 +143,15 @@ private:
     QHash<QString, QStringList> mHWStrings;
     QHash<QString, QButtonGroup*> mHWGroups;
     QHash<QString, QCheckBox*> mHWFlags;
-    KStatusNotifierItem* mTray;
-    bool m_startDocked;
-    bool m_shuttingDown;
     QTimer* mTimer;
     EnvyCard* mCard;
     QMap<int, QWidget*> mRouting;
     int m_PeakSampleFreq, m_MaxPeakSize, m_CurrentSlot, m_MaxPeakSlot, m_MaxPeakValue, m_Color;
     QVector<int> m_MaxPeaks;
+
+    QPoint mLastPos;
+    bool mStartDocked;
+    TrayItem* mTrayItem;
 
 };
 
