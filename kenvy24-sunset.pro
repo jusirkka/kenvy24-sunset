@@ -5,6 +5,8 @@ TARGET.path = /usr/bin
 
 CONFIG += -debug
 
+DEFINES += QT_NO_DEBUG_OUTPUT
+
 QT += core gui widgets dbus
 
 DBUS_ADAPTORS += mixer.xml tray.xml
