@@ -3,6 +3,8 @@ TEMPLATE = app
 TARGET.files = kenvy24-sunset
 TARGET.path = /usr/bin
 
+CONFIG += -debug
+
 QT += core gui widgets dbus
 
 DBUS_ADAPTORS += mixer.xml tray.xml
