@@ -1,5 +1,5 @@
-mkdir kenvy24-sunset-build
-cd kenvy24-sunset
-cmake -Wno-dev --build ../kenvy24-sunset-build .
+mkdir ../build-kenvy24-sunset
+cd ../build-kenvy24-sunset
+qmake -qt5 -spec linux-g++ ../kenvy24-sunset/kenvy24-sunset.pro
 make
 sudo make install
