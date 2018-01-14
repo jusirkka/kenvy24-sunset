@@ -20,8 +20,7 @@
 
 #include <QSlider>
 #include <QCheckBox>
-#include <kconfig.h>
-#include <kdebug.h>
+#include <QDebug>
 
 
 #include "mastervolume.h"

@@ -24,8 +24,7 @@
 #include "settings.h"
 
 #include <QButtonGroup>
-#include <kconfig.h>
-#include <kdebug.h>
+#include <QDebug>
 
 PatchBox::PatchBox(QWidget* parent):
     QWidget(parent),
